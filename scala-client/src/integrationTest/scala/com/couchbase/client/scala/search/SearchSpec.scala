@@ -104,7 +104,7 @@ class SearchSpec extends ScalaIntegrationTest {
   }
 
   @Test
-  def simple() {
+  def simple(): Unit = {
     cluster.searchQuery(
       indexName,
       SearchQuery.matchPhrase("John Smith"),
@@ -123,7 +123,7 @@ class SearchSpec extends ScalaIntegrationTest {
   }
 
   @Test
-  def facets() {
+  def facets(): Unit = {
     cluster.searchQuery(
       indexName,
       SearchQuery.matchPhrase("Smith"),
