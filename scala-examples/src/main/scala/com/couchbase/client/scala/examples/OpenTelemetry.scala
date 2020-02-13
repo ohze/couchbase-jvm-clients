@@ -14,23 +14,20 @@
  * limitations under the License.
  */
 package com.couchbase.client.scala.examples
-import java.time.Duration
-
-import com.couchbase.client.core.cnc.{RequestSpan, RequestTracer}
 import com.couchbase.client.core.env.PasswordAuthenticator
+// Need import JsonSerializer.JsonObjectConvert
+// Otherwise, compile on scala 2.11 will throw:
+//  [error] ...OpenTelemetry.scala:61:24: Symbol 'term org.typelevel' is missing from the classpath.
+//  [error] This symbol is required by 'object com.couchbase.client.scala.codec.JsonSerializer.JawnConvert'.
+// Where line :61 is collection.upsert("test", JsonObject.create).get
+import com.couchbase.client.scala.codec.JsonSerializer.JsonObjectConvert
 import com.couchbase.client.scala.env.ClusterEnvironment
 import com.couchbase.client.scala.json.JsonObject
 import com.couchbase.client.scala.{Cluster, ClusterOptions}
-import com.couchbase.client.tracing.opentelemetry.{
-  OpenTelemetryInternalSpan,
-  OpenTelemetryRequestSpan,
-  OpenTelemetryRequestTracer
-}
+import com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestTracer
 import io.opentelemetry.exporters.inmemory.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.TracerSdkFactory
 import io.opentelemetry.sdk.trace.export.SimpleSpansProcessor
-import io.opentelemetry.trace.{Span, Tracer}
-import reactor.core.publisher.Mono
 
 import scala.util.{Failure, Success}
 

@@ -17,6 +17,7 @@
 package com.couchbase.client.test;
 
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -87,6 +88,7 @@ public class Util {
    */
   public static String readResource(final String filename, final Class<?> clazz) {
     String path = "/" + clazz.getPackage().getName().replace(".", "/") + "/" + filename;
+    path = Paths.get(path).normalize().toString();
     InputStream stream = clazz.getResourceAsStream(path);
     java.util.Scanner s = new java.util.Scanner(stream, UTF_8.name()).useDelimiter("\\A");
     return s.hasNext() ? s.next() : "";
