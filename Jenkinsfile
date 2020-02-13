@@ -71,16 +71,15 @@ pipeline {
                     shWithEcho("ls $JAVA_HOME")
                     shWithEcho("echo $PATH")
                     shWithEcho("java -version")
-                    shWithEcho("make deps-only")
 
                     // Skips the tests, that's done in other stages
-                    // The -B -Dorg... stuff hides download progress messages, very verbose
-                    shWithEcho("mvn install -Dmaven.test.skip -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn")
-
-                    // This is to speed up iteration during development, skips out some stuff
-                    // shWithEcho("mvn -pl '!scala-client,!scala-implicits' install -Dmaven.test.skip -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn")
+                    // The -Dorg... stuff hides download progress messages, very verbose
+                    // `++test:update` means run `update` task in `test` configuration on all crossScalaVersions
+                    shWithEcho("./sbt \"checkstyleAll; scalafmtCheckAll; ++publishM2; ++test:compile; ++it:compile\" -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn")
                 }
 
+                // FIXME should we stash $HOME/.m2/repository, $HOME/.ivy2/cache,..?
+                // @see https://www.scala-sbt.org/1.x/docs/Travis-CI-with-sbt.html#Caching
                 stash includes: 'couchbase-jvm-clients/', name: 'couchbase-jvm-clients', useDefaultExcludes: false
             }
         }
@@ -98,51 +97,7 @@ pipeline {
                     installJDKIfNeeded(platform, OPENJDK, OPENJDK_11)
 
                     dir('couchbase-jvm-clients') {
-                        shWithEcho("make deps-only")
-                        shWithEcho("mvn install -Dmaven.test.skip -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn")
-                    }
-                }
-            }
-        }
-
-        // Scala 2.11 & 2.13 aren't officially distributed or supported, but we have community depending on it so check
-        // they at least compile
-        stage('build Scala 2.11') {
-            agent { label DEFAULT_PLATFORM }
-            environment {
-                JAVA_HOME = "${WORKSPACE}/deps/${OPENJDK}-${OPENJDK_8}"
-                PATH = "${WORKSPACE}/deps/${OPENJDK}-${OPENJDK_8}/bin:$PATH"
-            }
-            steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                    cleanWs()
-                    unstash 'couchbase-jvm-clients'
-                    // 2.11 must be built with JDK 8
-                    installJDKIfNeeded(platform, OPENJDK, OPENJDK_8)
-
-                    dir('couchbase-jvm-clients') {
-                        shWithEcho("make deps-only")
-                        shWithEcho("mvn -Dmaven.test.skip -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -Dscala.compat.version=2.11 -Dscala.compat.library.version=2.11.12 clean compile")
-                    }
-                }
-            }
-        }
-
-        stage('build Scala 2.13') {
-            agent { label DEFAULT_PLATFORM }
-            environment {
-                JAVA_HOME = "${WORKSPACE}/deps/${OPENJDK}-${OPENJDK_11}"
-                PATH = "${WORKSPACE}/deps/${OPENJDK}-${OPENJDK_11}/bin:$PATH"
-            }
-            steps {
-                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                    cleanWs()
-                    unstash 'couchbase-jvm-clients'
-                    installJDKIfNeeded(platform, OPENJDK, OPENJDK_11)
-
-                    dir('couchbase-jvm-clients') {
-                        shWithEcho("make deps-only")
-                        shWithEcho("mvn -Dmaven.test.skip -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -Dscala.compat.version=2.13 -Dscala.compat.library.version=2.13.1 clean compile")
+                        shWithEcho("./sbt \"++compile; ++test:compile; ++it:compile\" -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn")
                     }
                 }
             }
@@ -167,17 +122,17 @@ pipeline {
 
                     dir('couchbase-jvm-clients') {
                         // By default Java and Scala use mock for testing
-                        shWithEcho("mvn --fail-at-end test")
+                        shWithEcho("./sbt \"++test; ++it:test\"")
 
                         // While iterating Jenkins development, this makes it much faster:
-                        // shWithEcho("mvn package surefire:test -Dtest=com.couchbase.client.java.ObserveIntegrationTest -pl java-client")
+                        // shWithEcho("./sbt \"java-client / testOnly com.couchbase.client.java.ObserveIntegrationTest\"")
                     }
                 }
             }
             post {
                 always {
                     // Process the Junit test results
-                    junit allowEmptyResults: true, testResults: '**/surefire-reports/*.xml'
+                    junit allowEmptyResults: true, testResults: '**/test-reports/*.xml'
                 }
             }
         }
@@ -322,7 +277,7 @@ pipeline {
             }
             post {
                 always {
-                    junit allowEmptyResults: true, testResults: '**/surefire-reports/*.xml'
+                    junit allowEmptyResults: true, testResults: '**/test-reports/*.xml'
                 }
             }
         }
@@ -349,7 +304,7 @@ pipeline {
              }
              post {
                  always {
-                     junit allowEmptyResults: true, testResults: '**/surefire-reports/*.xml'
+                     junit allowEmptyResults: true, testResults: '**/test-reports/*.xml'
                  }
              }
          }
@@ -376,7 +331,7 @@ pipeline {
              }
              post {
                  always {
-                     junit allowEmptyResults: true, testResults: '**/surefire-reports/*.xml'
+                     junit allowEmptyResults: true, testResults: '**/test-reports/*.xml'
                  }
              }
          }
@@ -403,7 +358,7 @@ pipeline {
 //            }
 //            post {
 //                always {
-//                    junit allowEmptyResults: true, testResults: '**/surefire-reports/*.xml'
+//                    junit allowEmptyResults: true, testResults: '**/test-reports/*.xml'
 //                }
 //            }
 //        }
@@ -430,7 +385,7 @@ pipeline {
              }
              post {
                  always {
-                     junit allowEmptyResults: true, testResults: '**/surefire-reports/*.xml'
+                     junit allowEmptyResults: true, testResults: '**/test-reports/*.xml'
                  }
              }
          }
@@ -457,7 +412,7 @@ pipeline {
              }
              post {
                  always {
-                     junit allowEmptyResults: true, testResults: '**/surefire-reports/*.xml'
+                     junit allowEmptyResults: true, testResults: '**/test-reports/*.xml'
                  }
              }
          }
@@ -490,7 +445,7 @@ pipeline {
 //             post {
 //                 always {
 //                     // Process the Junit test results
-//                     junit allowEmptyResults: true, testResults: '**/surefire-reports/*.xml'
+//                     junit allowEmptyResults: true, testResults: '**/test-reports/*.xml'
 //                 }
 //             }
 //         }
@@ -504,7 +459,7 @@ pipeline {
                     shWithEcho("find . -iname *.jar")
                     // archiveArtifacts artifacts: 'couchbase-jvm-clients/', fingerprint: true
                     archiveArtifacts artifacts: 'java-client/target/*.jar', fingerprint: true
-                    archiveArtifacts artifacts: 'scala-client/target/*.jar', fingerprint: true
+                    archiveArtifacts artifacts: 'scala-client/target/scala-*/*.jar', fingerprint: true
                     archiveArtifacts artifacts: 'core-io/target/*.jar', fingerprint: true
                     archiveArtifacts artifacts: 'java-examples/target/*.jar', fingerprint: true
                     archiveArtifacts artifacts: 'tracing-opentelemetry/target/*.jar', fingerprint: true
@@ -648,18 +603,15 @@ void testAgainstServer(String serverVersion,
             shWithEcho("curl -v -X POST -u Administrator:password -d 'enabled=true' http://" + ip + ":8091/settings/developerPreview")
         }
 
-        // Not sure why this is needed, it should be in stash from build....
-        shWithEcho("make deps-only")
-
         // The -B -Dorg... stuff hides download progress messages, very verbose
         if (!QUICK_TEST_MODE) {
-            shWithEcho("mvn --fail-at-end install -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn")
+            shWithEcho("./sbt \"++test; ++it:test\" -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn")
         } else {
             // This is for iteration during development, skips out some steps
-            shWithEcho("mvn -pl '!scala-client,!scala-implicits' --fail-at-end install test -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn")
+            shWithEcho("./sbt \"test; it:test\" -DSBT_PL='!scala-client,!scala-implicits' -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn")
 
             // Another iteration option, this runs just one test
-            //shWithEcho("mvn package surefire:test -Dtest=com.couchbase.client.java.ObserveIntegrationTest -pl java-client")
+            //shWithEcho("./sbt \"java-client / testOnly com.couchbase.client.java.ObserveIntegrationTest\"")
         }
 
 
