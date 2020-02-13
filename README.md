@@ -47,44 +47,38 @@ or if you use sbt:
 libraryDependencies += "com.couchbase.client" %% "scala-client" % "1.0.4"
 ```
 
-## Building
+## Build / Test
 You can always also just build it from source:
-
++ Clone git repository
 ```
 $ git clone https://github.com/couchbase/couchbase-jvm-clients.git
 $ cd couchbase-jvm-clients
-$ make
+$ ./sbt
 ```
 
-Yes, we need `make` because maven doesn't support the setup we need and neither does gradle. If you
-want to build for different Scala versions, after the first `make` you can do this through:
-
++ [Run sbt](https://www.scala-sbt.org/1.x/docs/Running.html)
 ```shell script
-$ ./mvnw -Dscala.compat.version=2.13 -Dscala.compat.library.version=2.13.1 clean install
-$ ./mvnw -Dscala.compat.version=2.11 -Dscala.compat.library.version=2.11.12 clean install
+cd couchbase-jvm-clients
+./sbt
 ```
+(We bundled [sbt-extra](https://github.com/paulp/sbt-extras) script at [./sbt]
+ so you don't need to [install sbt](https://www.scala-sbt.org/1.x/docs/Setup.html).
+ Of course if you have installed sbt, you can run `sbt` command instead of `./sbt`)
+We use sbt for all couchbase-jvm-clients' sub projects including the java-only projects such as `core-io`, `java-client`.
 
-Notes:
-+ The two `mvn` runs are to cross-compile the Scala SDK for Scala 2.11, and 2.13
-+ Couchbase only officially provides, tests and supports a Scala 2.12 build.
-Our community kindly added the capability to create builds for Scala 2.11 and 2.13, and users are of course welcome to create such builds; but Couchbase cannot provide support for them.
-+ When building for Scala 2.11, JDK 8 should be used. If JDK 11 is used then goal scala:doc-jar will fail
-+ Default `scala.compat.`X properties are defined in file [.mvn/maven.config]
-+ You can always go into one of the sub-directories like `core-io` to only build or test an
-individual project:
-    ```shell script
-    cd scala-client
-    ../mvnw -DskipTests clean install
-    ```
-+ Use `-DskipTests` to skip testing.
-
-### Testing
-
-You can test like this:
-
-```shell script
-$ ./mvnw clean test -fae
-```
++ In sbt shell, run:
+    - `compile` or `test` or `it:test` to compile/ test/ integration test all sub project.
+    - `core-io / compile` to compile only `core-io` sub-project.
+    - `projects` to list all sub-projects
+    -  `project scala-client` to switch to `scala-client` sub-project. All subsequence command will be run in this active project.
+    - `+test` to test for all versions of Scala defined in the crossScalaVersions setting of the active project.
+       For example scala-client / crossScalaVersions includes 2.13.1, 2.12.10, 2.11.12.
+    - `testOnly com.couchbase.client.core.CoreTest` to test only the test in CoreTest test spec.
+       (sbt support tab completion, so you can `testOnly <tab>` to see all test spec names)
+    - `clean; compile` to clean and then compile (`cmd1; cmd2` is similar to run `cmd1`, and then run `cmd2`)
+    - `publishLocal` or `publishM2` to publish to ivy or maven local repository.
+    - `test:checkstyle` or `test:scalafmt` to [checkstyle](http://checkstyle.sourceforge.net/)/ [scalafmt](https://scalameta.org/scalafmt/) your java/ scala test files.
+We recommend you to skim through the [Getting Started with sbt](https://www.scala-sbt.org/1.x/docs/Getting-Started.html) document.
 
 ### Branches & Release Trains
 
@@ -141,4 +135,4 @@ Scala code is automatically formatted on compile with the tool `scalafmt`.  To m
 Editor -> Code Style -> Scala, change formatter to scalafmt
 and check [Reformat on file save](https://scalameta.org/scalafmt/docs/installation.html#format-on-save)
 
-(`mvn validate` can be used from command-line to force reformat)
+(`scalafmtAll` can be used from sbt shell to force reformat. See also other [scalafmt* sbt tasks](https://scalameta.org/scalafmt/docs/installation.html#task-keys))
