@@ -30,7 +30,7 @@ import java.util.List;
  * Helper functions to aid with parsing get-with-projections calls.
  *
  * Largely a port of Scala's ProjectionsApplier.  It cannot be moved into core as it needs to handle both Java and
- * Scala's JsonObject & JsonArray.
+ * Scala's JsonObject and JsonArray.
  *
  * @since 3.0.0
  */
