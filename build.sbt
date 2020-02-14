@@ -35,10 +35,10 @@ lazy val javaModuleSettings = commonSettings ++ Seq(
   crossPaths := false        // drop off Scala suffix from artifact names and publish path
 )
 
-val defaultScala = scalaVersion := "2.13.1"
 lazy val scalaModuleSettings = commonSettings ++ Seq(
-  defaultScala,
-  crossScalaVersions := Seq("2.13.1", "2.12.10", "2.11.12"),
+  version := "1.1.0-SNAPSHOT",
+  scalaVersion := V.scala,
+  crossScalaVersions := V.crossScala,
   scalacOptions ++= Seq("-encoding", "UTF-8", "-target:jvm-1.8", "-deprecation", "-feature"),
   scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
     // Required for Scala 2.11 build, this enables support for Java SAM.
@@ -203,7 +203,7 @@ lazy val `tracing-opentelemetry` = project
       opentelemetry("exporters-inmemory") % Test
     ),
     // tracing-opentelemetry need scala only when test
-    defaultScala,
+    scalaVersion := V.scala,
     scalacOptions ++= Seq("-encoding", "UTF-8", "-target:jvm-1.8", "-deprecation", "-feature"),
     Test / unmanagedSourceDirectories := Seq((Test / javaSource).value, (Test / scalaSource).value)
   )
@@ -215,12 +215,17 @@ lazy val `scala-implicits` = project
   .settings(scalaModuleSettings: _*)
   .settings(
     description := "The official Couchbase Scala SDK (Implicits)",
-    version := "1.1.0-SNAPSHOT",
-    libraryDependencies ++= scalaImplicitsDeps.value,
-    exportJars := true,
-    publish / skip := true
+    libraryDependencies ++= scalaImplicitsDeps.value
   )
   .dependsOn(`core-io`, `test-utils` % Test)
+
+lazy val `scala-macro` = project
+  .disablePlugins(AssemblyPlugin, CheckstylePlugin)
+  .settings(scalaModuleSettings: _*)
+  .settings(
+    libraryDependencies += jsoniterScala("macros")
+  )
+  .dependsOn(`scala-implicits`)
 
 val scalaClientAssemblySettings = commonAssemblySettings ++ inTask(assembly)(
   Seq(
@@ -230,16 +235,14 @@ val scalaClientAssemblySettings = commonAssemblySettings ++ inTask(assembly)(
     ).map { p =>
       ShadeRule.rename(s"$p.**" -> s"${organization.value}.scala.deps.@0").inAll
     },
-    // shade scala-java8-compat, scala-implicits and selfJar (scala-client)
+    // shade scala-java8-compat, and selfJar (scala-client)
     assemblyExcludedJars := {
-      val cp           = fullClasspath.value
-      val depJar       = (`scala-implicits` / Compile / packageBin / artifactPath).value
-      val selfJar      = (Compile / packageBin / artifactPath).value
-      val includedJars = Set(depJar, selfJar)
-      val sv           = scalaBinaryVersion.value
+      val cp      = fullClasspath.value
+      val selfJar = (Compile / packageBin / artifactPath).value
+      val sv      = scalaBinaryVersion.value
       cp.filterNot { entry =>
         entry.isModule(scalaJava8Compat, sv) ||
-        includedJars.contains(entry.data)
+        entry.data == selfJar
       }
     },
     shadeResourceTransformers += Discard(
@@ -253,7 +256,6 @@ lazy val `scala-client` = project
   .enableAssemblyPublish()
   .settings(
     description := "The official Couchbase Scala SDK",
-    version := "1.1.0-SNAPSHOT",
     libraryDependencies ++= scalaClientDeps.value,
     // https://docs.scala-lang.org/overviews/core/collections-migration-213.html#how-do-i-cross-build-my-project-against-scala-212-and-scala-213
     unmanagedSourceDirectories in Compile += {
@@ -265,15 +267,14 @@ lazy val `scala-client` = project
     }
   )
   .itConfig()
-  .dependsOn(`core-io`, `scala-implicits`, `test-utils` % Test)
-  .removePomDependsOn(`scala-implicits`)
+  .dependsOn(`core-io`, `scala-implicits`, `scala-macro` % Provided, `test-utils` % Test)
+  .removePomDependsOn(scalaJava8Compat)
 
 lazy val `scala-examples` = project
   .disablePlugins(AssemblyPlugin, CheckstylePlugin)
   .settings(scalaModuleSettings: _*)
   .settings(
     description := "Examples for the Couchbase Scala SDK",
-    version := "1.1.0-SNAPSHOT",
     // resolvers += "oss.sonatype.org-snapshot" at "https://oss.jfrog.org/artifactory/oss-snapshot-local",
     libraryDependencies ++= Seq(
       opentelemetry("sdk"),
@@ -302,6 +303,7 @@ lazy val aggregated = Seq[ProjectReference](
   `java-client`,
   `java-examples`,
   `scala-implicits`,
+  `scala-macro`,
   `scala-client`,
   `scala-examples`,
   `test-utils`,
