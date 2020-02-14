@@ -4,12 +4,18 @@ import sbtassembly.shadeplugin.ResourceTransformer.{Discard, Rename}
 import sbtassembly.shadeplugin.ShadePlugin.autoImport.shadeKeys.artifactIdSuffix
 import sbtassembly.shadeplugin.ShadePluginUtils._
 
+// TODO remove this (only to speedup publishLocal)
+lazy val disableDocSettings = Seq(
+  Compile / doc / sources := Nil,
+  Compile / packageDoc / publishArtifact := false
+)
+
 lazy val checkstyleSettings = Seq(
   checkstyleSeverityLevel := Some(CheckstyleSeverityLevel.Error),
   checkstyleConfigLocation := (ThisBuild / baseDirectory).value / "config" / "checkstyle" / "checkstyle-basic.xml",
   checkstyleHeaderFile := (ThisBuild / baseDirectory).value / "config" / "checkstyle" / "checkstyle-header.txt"
 )
-lazy val commonSettings = checkstyleSettings ++ Seq(
+lazy val commonSettings = disableDocSettings ++ checkstyleSettings ++ Seq(
   organization := "com.couchbase.client",
   javacOptions ++= Seq("-encoding", "UTF-8"),
   Compile / compile / javacOptions ++= (javaVersion match {
