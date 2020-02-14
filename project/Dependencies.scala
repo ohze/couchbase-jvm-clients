@@ -1,19 +1,19 @@
-import sbt._
+import sbt.{Def, _}
 import Keys._
 
 object Dependencies {
   object V {
-    val crossScalaVersions = Seq("2.13.1", "2.12.10", "2.11.12")
-    val scalaVersion       = "2.13.1"
-    val reactor            = "3.3.1.RELEASE"
-    val slf4j              = "1.7.30"
-    val netty              = "4.1.45.Final"
-    val nettyBoringssl     = "2.0.28.Final"
-    val jctools            = "2.1.2" // 3.0.0
-    val jackson            = "2.10.1" // 2.10.2
-    val snappy             = "0.4"
-    val latencyutils       = "2.0.3"
-    val log4jSlf4j         = "2.13.0"
+    val crossScala     = Seq("2.13.1", "2.12.10", "2.11.12")
+    val scala          = "2.13.1"
+    val reactor        = "3.3.1.RELEASE"
+    val slf4j          = "1.7.30"
+    val netty          = "4.1.45.Final"
+    val nettyBoringssl = "2.0.28.Final"
+    val jctools        = "2.1.2" // 3.0.0
+    val jackson        = "2.10.1" // 2.10.2
+    val snappy         = "0.4"
+    val latencyutils   = "2.0.3"
+    val log4jSlf4j     = "2.13.0"
     // jupiter-interface's version should be same as sbt-jupiter-interface's version in project/plugins.sbt
     val jupiterInterface = "0.8.3"
     val junit            = "5.5.2"
@@ -25,7 +25,7 @@ object Dependencies {
     val opentracing      = "0.33.0"
     val opentelemetry    = "0.2.0"
     val scalaCollCompat  = "2.1.3"
-    val jsoniter         = "0.9.23"
+    // val jsoniter         = "0.9.23"
     val jsoniterScala    = "2.1.6"
     val json4s           = "3.6.7"
     val jawnAst          = "0.14.3"
@@ -156,8 +156,7 @@ object Dependencies {
     Seq(
       scalaCollCompat,
       jsoniterScala("core"),
-      jsoniterScala("macros") % Provided,
-      upickle.value           % Optional
+      upickle.value % Optional
     ) ++ scalaModuleOptionalDeps.value
   }
 
@@ -165,7 +164,6 @@ object Dependencies {
     Seq(
       reactorScala,
       jsoniterScala("core"),
-      jsoniterScala("macros"), // FIXME should be `% Provided`
       scalaJava8Compat,
       scalaCollCompat,
       scalacheck      % Test,
