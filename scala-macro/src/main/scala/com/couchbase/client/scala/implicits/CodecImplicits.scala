@@ -62,67 +62,33 @@ private[scala] object CodecImplicits {
   // SCBC-158: Note on withSetMaxInsertNumber(100000) below.  The default number of items allowed in Sets and Maps is a
   // conservative 1,024.  Adjusting this to an arbitrary 100k.
 
-  // Implementation detail: the excellent JSON library Jsoniter, with the extensions from com.github.plokhotnyuk.jsoniter_scala,
+  // Implementation detail: the excellent JSON library com.github.plokhotnyuk.jsoniter_scala
   // is currently used to encode and decode case classes.  This is purely an implementation detail and should not be
   // relied upon.
-  def makeDeserializer[T](
-      c: scala.reflect.macros.blackbox.Context
-  )(implicit e: c.WeakTypeTag[T]): c.universe.Tree = {
-    import c.universe._
-    q"""
-    new JsonDeserializer[${e}] {
-      import com.github.plokhotnyuk.jsoniter_scala.core._
-      import com.github.plokhotnyuk.jsoniter_scala.macros._
-
-      implicit val jsonIterDecodeCodec: JsonValueCodec[$e] =
-        JsonCodecMaker.make[$e](CodecMakerConfig.withSetMaxInsertNumber(100000).withMapMaxInsertNumber(100000))
-
-      override def deserialize(bytes: Array[Byte]): scala.util.Try[$e] = {
-        scala.util.Try(readFromArray(bytes))
-      }
-    }
-    """
-  }
-
-  def makeSerializer[T](
-      c: scala.reflect.macros.blackbox.Context
-  )(implicit e: c.WeakTypeTag[T]): c.universe.Tree = {
-    import c.universe._
-    q"""
-    new JsonSerializer[$e] {
-      import com.github.plokhotnyuk.jsoniter_scala.core._
-      import com.github.plokhotnyuk.jsoniter_scala.macros._
-
-      implicit val jsonIterEncodeCodec: JsonValueCodec[$e] =
-       JsonCodecMaker.make[$e](CodecMakerConfig.withSetMaxInsertNumber(100000).withMapMaxInsertNumber(100000))
-
-      override def serialize(content: $e): scala.util.Try[Array[Byte]] = {
-        scala.util.Try(writeToArray(content))
-      }
-    }
-    """
-  }
-
   def makeCodec[T](
       c: scala.reflect.macros.blackbox.Context
   )(implicit e: c.WeakTypeTag[T]): c.universe.Tree = {
     import c.universe._
     q"""
     new Codec[$e] {
-      import com.github.plokhotnyuk.jsoniter_scala.core._
-      import com.github.plokhotnyuk.jsoniter_scala.macros._
-      import scala.reflect.runtime.universe._
-      import scala.util.{Failure, Success, Try}
+      import com.github.plokhotnyuk.jsoniter_scala.core.{JsonValueCodec, readFromArray, writeToArray}
+      import com.github.plokhotnyuk.jsoniter_scala.macros.{CodecMakerConfig, JsonCodecMaker}
+
+      import scala.util.Try
 
       val jsonIterCodec: JsonValueCodec[$e] =
-       JsonCodecMaker.make[$e](CodecMakerConfig.withSetMaxInsertNumber(100000).withMapMaxInsertNumber(100000))
+        JsonCodecMaker.make[$e](
+          CodecMakerConfig
+            .withSetMaxInsertNumber(100000)
+            .withMapMaxInsertNumber(100000)
+        )
 
       override def serialize(input: $e): Try[Array[Byte]] = {
-        scala.util.Try(writeToArray(input)(jsonIterCodec))
+        Try(writeToArray(input)(jsonIterCodec))
       }
 
       override def deserialize(input: Array[Byte]): Try[$e] = {
-        scala.util.Try(readFromArray(input)(jsonIterCodec))
+        Try(readFromArray(input)(jsonIterCodec))
       }
     }
     """
