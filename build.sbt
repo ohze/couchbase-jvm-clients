@@ -215,7 +215,8 @@ lazy val `scala-implicits` = project
   .settings(scalaModuleSettings: _*)
   .settings(
     description := "The official Couchbase Scala SDK (Implicits)",
-    libraryDependencies ++= scalaImplicitsDeps.value
+    libraryDependencies ++= scalaImplicitsDeps.value,
+    exportJars := true
   )
   .dependsOn(`core-io`, `test-utils` % Test)
 
