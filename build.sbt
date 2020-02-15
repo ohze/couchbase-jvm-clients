@@ -274,7 +274,7 @@ lazy val `scala-client` = project
     }
   )
   .itConfig()
-  .dependsOn(`core-io`, `scala-implicits`, `scala-macro` % Provided, `test-utils` % Test)
+  .dependsOn(`core-io`, `scala-implicits`, `scala-macro` % "provided;test", `test-utils` % Test)
   .removePomDependsOn(scalaJava8Compat)
 
 lazy val `scala-examples` = project
