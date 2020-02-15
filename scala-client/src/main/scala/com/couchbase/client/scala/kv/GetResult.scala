@@ -21,7 +21,6 @@ import com.couchbase.client.scala.json.JsonObject
 import scala.reflect.runtime.universe._
 
 import scala.concurrent.duration.Duration
-import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
 /** The result of a `get` operation, e.g. the contents of a document.
@@ -59,13 +58,8 @@ case class GetResult(
     */
   def contentAs[T](
       implicit deserializer: JsonDeserializer[T],
-      tt: WeakTypeTag[T],
-      tag: ClassTag[T]
+      tt: WeakTypeTag[T]
   ): Try[T] = {
-    // Both WeakTypeTag and ClassTag are used, WeakTypeTag can be removed if find a way to do tag.unapply(obj) below with
-    // ClassTag.
-    // WeakTypeTag is used over TypeTag so app does not have make every case class top-level.
-
     _content match {
       case Left(bytes) =>
         // Regular case
@@ -76,15 +70,16 @@ case class GetResult(
 
       case Right(obj) =>
         // Projection
-        tag.unapply(obj) match {
-          case Some(o) => Success(o)
-          case _ =>
-            Failure(
-              new IllegalArgumentException(
-                "Projection results can currently only be returned with " +
-                  "contentAs[JsonObject]"
-              )
+        // Check if JsonObject is sub-type of T, which mean T is JsonObject | AnyRef | Any
+        if (weakTypeOf[JsonObject] <:< tt.tpe) {
+          Success(obj.asInstanceOf[T])
+        } else {
+          Failure(
+            new IllegalArgumentException(
+              "Projection results can currently only be returned with " +
+                "contentAs[JsonObject]"
             )
+          )
         }
     }
   }
