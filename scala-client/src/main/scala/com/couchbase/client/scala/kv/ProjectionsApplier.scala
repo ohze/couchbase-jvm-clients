@@ -64,30 +64,35 @@ private[scala] object ProjectionsApplier {
   }
 
   // Will follow `path`, constructing JSON as it does, and inserting `content` at the leaf
-  @tailrec
   private def parseRec(
       in: Either[JsonObject, JsonArray],
       path: List[PathElement],
       content: Any
-  ): Try[Unit] = {
-    path match {
-      case Nil => Success(())
+  ): Try[Unit] = Try(parseRecNoTry(in, path, content))
 
+  @tailrec
+  private def parseRecNoTry(
+      in: Either[JsonObject, JsonArray],
+      path: List[PathElement],
+      content: Any
+  ): Unit = {
+    path match {
+      case Nil =>
       case x :: Nil =>
         x match {
           case v: PathArray =>
             val toInsert = JsonArray.create.add(content)
             in match {
-              case Left(obj)  => Success(obj.put(v.str, toInsert))
-              case Right(arr) => Success(arr.add(toInsert))
+              case Left(obj)  => obj.put(v.str, toInsert)
+              case Right(arr) => arr.add(toInsert)
             }
           case v: PathObjectOrField =>
             in match {
-              case Left(obj) => Success(obj.put(v.str, content))
+              case Left(obj) => obj.put(v.str, content)
               case Right(arr) => {
                 val toInsert = JsonObject.create
                 toInsert.put(v.str, content)
-                Success(arr.add(toInsert))
+                arr.add(toInsert)
               }
             }
         }
@@ -99,10 +104,10 @@ private[scala] object ProjectionsApplier {
             in match {
               case Left(obj) =>
                 obj.put(v.str, toInsert)
-                parseRec(Right(toInsert), xs, content)
+                parseRecNoTry(Right(toInsert), xs, content)
               case Right(arr) =>
                 arr.add(toInsert)
-                parseRec(Right(toInsert), xs, content)
+                parseRecNoTry(Right(toInsert), xs, content)
             }
           case v: PathObjectOrField =>
             in match {
@@ -112,13 +117,13 @@ private[scala] object ProjectionsApplier {
                   case _          => JsonObject.create
                 }
                 obj.put(v.str, createIn)
-                parseRec(Left(createIn), xs, content)
+                parseRecNoTry(Left(createIn), xs, content)
               case Right(arr) =>
                 val toCreate     = JsonObject.create
                 val nextToCreate = JsonObject.create
                 toCreate.put(v.str, nextToCreate)
                 arr.add(toCreate)
-                parseRec(Left(nextToCreate), xs, content)
+                parseRecNoTry(Left(nextToCreate), xs, content)
             }
         }
     }
