@@ -19,11 +19,6 @@ import java.nio.charset.StandardCharsets
 import com.couchbase.client.core.error.DecodingFailureException
 import com.couchbase.client.scala.json.{JsonArray, JsonArraySafe, JsonObject, JsonObjectSafe}
 import com.couchbase.client.scala.transformers.JacksonTransformers
-import io.circe.Json
-import org.json4s.JValue
-import org.typelevel.jawn.ast
-import play.api.libs.json.JsValue
-import ujson.{Arr, Obj, Value}
 
 import scala.util.{Failure, Success, Try}
 
@@ -49,7 +44,7 @@ object JsonDeserializer {
 
   /** `JsonDeserializer` for `Array[Byte]`.
     *
-    * As required by the RFC, the default deserializer for String should deserialize the data as JSON.
+    * As required by the RFC, the default deserializer for Array[Byte] should pass through the data unchanged.
     */
   implicit object BytesConvert extends JsonDeserializer[Array[Byte]] {
     override def deserialize(bytes: Array[Byte]): Try[Array[Byte]] = Try(bytes)
@@ -57,7 +52,7 @@ object JsonDeserializer {
 
   /** `JsonDeserializer` for `String`.
     *
-    * As required by the RFC, the default deserializer for Array[Byte] should pass through the data unchanged.
+    * As required by the RFC, the default deserializer for String should deserialize the data as JSON.
     */
   implicit object StringConvert extends JsonDeserializer[String] {
     override def deserialize(bytes: Array[Byte]): Try[String] = {
@@ -126,7 +121,7 @@ object JsonDeserializer {
     * upickle is an optional dependency.
     */
   implicit object UjsonValueConvert extends JsonDeserializer[ujson.Value] {
-    override def deserialize(bytes: Array[Byte]): Try[Value] = {
+    override def deserialize(bytes: Array[Byte]): Try[ujson.Value] = {
       val out = Try(upickle.default.read[ujson.Value](bytes))
       out match {
         case Success(_)   => out
@@ -141,7 +136,7 @@ object JsonDeserializer {
     * upickle is an optional dependency.
     */
   implicit object UjsonObjConvert extends JsonDeserializer[ujson.Obj] {
-    override def deserialize(bytes: Array[Byte]): Try[Obj] = {
+    override def deserialize(bytes: Array[Byte]): Try[ujson.Obj] = {
       val out = Try(upickle.default.read[ujson.Obj](bytes))
       out match {
         case Success(_)   => out
@@ -156,7 +151,7 @@ object JsonDeserializer {
     * upickle is an optional dependency.
     */
   implicit object UjsonArrConvert extends JsonDeserializer[ujson.Arr] {
-    override def deserialize(bytes: Array[Byte]): Try[Arr] = {
+    override def deserialize(bytes: Array[Byte]): Try[ujson.Arr] = {
       tryDecode(upickle.default.read[ujson.Arr](bytes))
     }
   }
@@ -175,8 +170,10 @@ object JsonDeserializer {
     * Play Json is an optional dependency.
     */
   implicit object PlayConvert extends JsonDeserializer[play.api.libs.json.JsValue] {
+    import play.api.libs.json.{Json, JsValue}
+
     override def deserialize(bytes: Array[Byte]): Try[JsValue] = {
-      tryDecode(play.api.libs.json.Json.parse(bytes))
+      tryDecode(Json.parse(bytes))
     }
   }
 
@@ -186,8 +183,10 @@ object JsonDeserializer {
     * Json4s is an optional dependency.
     */
   implicit object Json4sConvert extends JsonDeserializer[org.json4s.JsonAST.JValue] {
+    import org.json4s.JValue, org.json4s.native.JsonMethods
+
     override def deserialize(bytes: Array[Byte]): Try[JValue] = {
-      tryDecode(org.json4s.native.JsonMethods.parse(new String(bytes, StandardCharsets.UTF_8)))
+      tryDecode(JsonMethods.parse(new String(bytes, StandardCharsets.UTF_8)))
     }
   }
 
@@ -197,9 +196,11 @@ object JsonDeserializer {
     * Jawn is an optional dependency.
     */
   implicit object JawnConvert extends JsonDeserializer[org.typelevel.jawn.ast.JValue] {
+    import org.typelevel.jawn.Parser.parseFromByteArray
+    import org.typelevel.jawn.ast
+
     override def deserialize(bytes: Array[Byte]): Try[ast.JValue] = {
-      org.typelevel.jawn.Parser
-        .parseFromString[org.typelevel.jawn.ast.JValue](new String(bytes, StandardCharsets.UTF_8))
+      parseFromByteArray[ast.JValue](bytes)
     }
   }
 
