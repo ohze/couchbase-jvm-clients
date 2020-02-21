@@ -94,10 +94,7 @@ case class LookupInResult(
       false
     } else {
       val field = content(index)
-      field.error().asScala match {
-        case Some(err) => false
-        case _         => true
-      }
+      field.error().asScala.isEmpty
     }
   }
 }
