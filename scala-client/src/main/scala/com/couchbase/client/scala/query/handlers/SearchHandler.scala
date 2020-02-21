@@ -72,7 +72,7 @@ private[scala] class SearchHandler(hp: HandlerBasicParams) {
     } else if (options.deferredError.isDefined) {
       Failure(options.deferredError.get)
     } else {
-      val params = options.export(indexName, query)
+      val params = options.`export`(indexName, query)
 
       val queryBytes = params.toString.getBytes(CharsetUtil.UTF_8)
 

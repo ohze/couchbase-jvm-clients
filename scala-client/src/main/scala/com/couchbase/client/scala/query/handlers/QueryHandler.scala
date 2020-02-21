@@ -54,7 +54,7 @@ import scala.compat.java8.FutureConverters._
   * cluster state.
   */
 private[scala] case class QueryCacheEntry(name: String, fullPlan: Boolean, value: Option[String]) {
-  def export = {
+  def `export` = {
     val result = JsonObject.create
     result.put("prepared", name)
     if (fullPlan) value.foreach(plan => result.put("encoded_plan", plan))
@@ -361,7 +361,7 @@ private[scala] class QueryHandler(hp: HandlerBasicParams)(implicit ec: Execution
       original: QueryRequest,
       originalOptions: QueryOptions
   ): QueryRequest = {
-    val query = cacheEntry.export
+    val query = cacheEntry.`export`
 
     query.put("timeout", encodeDurationToMs(original.timeout))
 
