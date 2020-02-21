@@ -200,7 +200,7 @@ case class SearchOptions(
 
   /** Exports the whole query as a `JsonObject`.
     */
-  private[scala] def export(indexName: String, query: SearchQuery): JsonObject = {
+  private[scala] def `export`(indexName: String, query: SearchQuery): JsonObject = {
     val result = JsonObject.create
     injectParams(indexName, result)
 
