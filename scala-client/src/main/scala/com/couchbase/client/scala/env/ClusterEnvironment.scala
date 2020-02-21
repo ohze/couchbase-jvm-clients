@@ -30,7 +30,7 @@ import reactor.core.scala.publisher.SMono
 import reactor.core.scala.scheduler.ExecutionContextScheduler
 import reactor.core.scheduler.Scheduler
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.concurrent.duration.Duration
 import scala.util.Try
 
@@ -235,7 +235,8 @@ class ClusterEnvironment(private[scala] val builder: ClusterEnvironment.Builder)
       thread
     }
   })
-  private[scala] implicit val ec      = ExecutionContext.fromExecutor(threadPool)
+  private[scala] implicit val ec: ExecutionContextExecutor =
+    ExecutionContext.fromExecutor(threadPool)
   private[scala] val defaultScheduler = ExecutionContextScheduler(ec)
 
   private val coreBuilder = new CoreEnvironmentWrapper()
