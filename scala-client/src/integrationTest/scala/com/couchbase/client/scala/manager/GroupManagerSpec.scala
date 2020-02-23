@@ -6,10 +6,9 @@ import com.couchbase.client.core.error.{
   UserNotFoundException
 }
 import com.couchbase.client.scala.manager.user._
-import com.couchbase.client.scala.util.ScalaIntegrationTest
+import com.couchbase.client.scala.util.{CouchbasePickler, ScalaIntegrationTest}
 import com.couchbase.client.scala.{Cluster, Collection}
 import com.couchbase.client.test._
-import io.circe.jawn
 import org.junit.jupiter.api.Assertions.{assertEquals, assertThrows}
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import org.junit.jupiter.api._
@@ -281,7 +280,7 @@ class GroupManagerSpec extends ScalaIntegrationTest {
   def parseGroup(): Unit = {
     val raw =
       """{"id":"group-a","roles":[{"role":"ro_admin"}],"ldap_group_ref":"ou=Users","description":"a"}"""
-    val group = jawn.decode[Group](raw).toOption.get
+    val group = CouchbasePickler.read[Group](raw)
     assert(group.roles.size == 1)
     assert(group.ldapGroupReference.contains("ou=Users"))
     assert(group.description == "a")

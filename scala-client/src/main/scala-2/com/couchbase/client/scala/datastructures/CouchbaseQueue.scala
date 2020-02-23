@@ -22,7 +22,7 @@ import com.couchbase.client.core.error.{
   DocumentNotFoundException
 }
 import com.couchbase.client.scala.Collection
-import com.couchbase.client.scala.codec.{JsonDeserializer, JsonSerializer}
+import com.couchbase.client.scala.codec.{Conversions, JsonDeserializer, JsonSerializer}
 import com.couchbase.client.scala.kv._
 
 import scala.util.{Failure, Success}

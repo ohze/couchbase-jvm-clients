@@ -31,7 +31,7 @@ import com.couchbase.client.test.{Capabilities, IgnoreWhen}
 import io.circe
 import io.circe.generic.semiauto
 import org.junit.jupiter.api.TestInstance.Lifecycle
-import org.junit.jupiter.api.{io => _, _}
+import org.junit.jupiter.api._
 import reactor.core.scala.publisher.SMono
 
 import scala.collection.immutable.Range

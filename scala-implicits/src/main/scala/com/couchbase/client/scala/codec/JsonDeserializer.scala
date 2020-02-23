@@ -19,6 +19,11 @@ import java.nio.charset.StandardCharsets
 import com.couchbase.client.core.error.DecodingFailureException
 import com.couchbase.client.scala.json.{JsonArray, JsonArraySafe, JsonObject, JsonObjectSafe}
 import com.couchbase.client.scala.transformers.JacksonTransformers
+import io.circe.Json
+import org.json4s.JValue
+import org.typelevel.jawn.ast
+import play.api.libs.json.JsValue
+import ujson.{Arr, Obj, Value}
 
 import scala.util.{Failure, Success, Try}
 
@@ -41,17 +46,6 @@ trait JsonDeserializer[T] {
 /** Contains all built-in JsonDeserializer, which allow a variety of types to be converted from what is stored on Couchbase Server.
   */
 object JsonDeserializer {
-//  import com.github.plokhotnyuk.jsoniter_scala.core.JsonValueCodec
-//  import com.github.plokhotnyuk.jsoniter_scala.core.{readFromArray => jsoniterReadFromArray}
-//  /** Provide a JsonDeserializer[T] if there is an implicit JsonValueCodec[T] in scope.
-//    *
-//    * @note SCBC-158: The underlying JsonValueCodec should be make with
-//    * {{{ CodecMakerConfig.withSetMaxInsertNumber(100000).withMapMaxInsertNumber(100000) }}}
-//    * The default number of items allowed in Sets and Maps is a conservative 1,024.
-//    * Adjusting this to an arbitrary 100k.
-//    * @see [[com.couchbase.client.scala.implicits.CodecImplicits.makeCodec]] */
-//  implicit def jsoniterDecode[T](implicit underlying: JsonValueCodec[T]): JsonDeserializer[T] =
-//    input => Try(jsoniterReadFromArray(input)(underlying))
 
   /** `JsonDeserializer` for `Array[Byte]`.
     *
@@ -132,7 +126,7 @@ object JsonDeserializer {
     * upickle is an optional dependency.
     */
   implicit object UjsonValueConvert extends JsonDeserializer[ujson.Value] {
-    override def deserialize(bytes: Array[Byte]): Try[ujson.Value] = {
+    override def deserialize(bytes: Array[Byte]): Try[Value] = {
       val out = Try(upickle.default.read[ujson.Value](bytes))
       out match {
         case Success(_)   => out
@@ -147,7 +141,7 @@ object JsonDeserializer {
     * upickle is an optional dependency.
     */
   implicit object UjsonObjConvert extends JsonDeserializer[ujson.Obj] {
-    override def deserialize(bytes: Array[Byte]): Try[ujson.Obj] = {
+    override def deserialize(bytes: Array[Byte]): Try[Obj] = {
       val out = Try(upickle.default.read[ujson.Obj](bytes))
       out match {
         case Success(_)   => out
@@ -162,7 +156,7 @@ object JsonDeserializer {
     * upickle is an optional dependency.
     */
   implicit object UjsonArrConvert extends JsonDeserializer[ujson.Arr] {
-    override def deserialize(bytes: Array[Byte]): Try[ujson.Arr] = {
+    override def deserialize(bytes: Array[Byte]): Try[Arr] = {
       tryDecode(upickle.default.read[ujson.Arr](bytes))
     }
   }
@@ -181,10 +175,8 @@ object JsonDeserializer {
     * Play Json is an optional dependency.
     */
   implicit object PlayConvert extends JsonDeserializer[play.api.libs.json.JsValue] {
-    import play.api.libs.json.{Json, JsValue}
-
     override def deserialize(bytes: Array[Byte]): Try[JsValue] = {
-      tryDecode(Json.parse(bytes))
+      tryDecode(play.api.libs.json.Json.parse(bytes))
     }
   }
 

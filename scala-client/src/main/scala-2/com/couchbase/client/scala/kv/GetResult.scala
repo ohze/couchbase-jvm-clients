@@ -21,6 +21,7 @@ import com.couchbase.client.scala.json.JsonObject
 import scala.reflect.runtime.universe._
 
 import scala.concurrent.duration.Duration
+import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
 /** The result of a `get` operation, e.g. the contents of a document.

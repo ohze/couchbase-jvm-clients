@@ -15,8 +15,7 @@
  */
 
 package com.couchbase.client.scala.search.result
-import io.circe
-import io.circe.generic.semiauto
+import com.couchbase.client.scala.util.CouchbasePickler
 
 /**
   * Base interface for all facet results.
@@ -63,7 +62,7 @@ object SearchFacetResult {
   case class DateRange(name: String, start: String, end: String, count: Long)
 
   private[scala] object DateRange {
-    implicit val rw: circe.Codec[DateRange] = semiauto.deriveCodec
+    implicit val rw: CouchbasePickler.ReadWriter[DateRange] = CouchbasePickler.macroRW
   }
 
   /**
@@ -93,7 +92,8 @@ object SearchFacetResult {
   ) extends SearchFacetResult
 
   private[scala] object DateRangeSearchFacetResult {
-    implicit val rw: circe.Codec[DateRangeSearchFacetResult] = semiauto.deriveCodec
+    implicit val rw: CouchbasePickler.ReadWriter[DateRangeSearchFacetResult] =
+      CouchbasePickler.macroRW
   }
 
   /**
@@ -123,13 +123,14 @@ object SearchFacetResult {
   ) extends SearchFacetResult
 
   private[scala] object NumericRangeSearchFacetResult {
-    implicit val rw: circe.Codec[NumericRangeSearchFacetResult] = semiauto.deriveCodec
+    implicit val rw: CouchbasePickler.ReadWriter[NumericRangeSearchFacetResult] =
+      CouchbasePickler.macroRW
   }
 
   case class NumericRange(name: String, min: Double, max: Double, count: Long)
 
   private[scala] object NumericRange {
-    implicit val rw: circe.Codec[NumericRange] = semiauto.deriveCodec
+    implicit val rw: CouchbasePickler.ReadWriter[NumericRange] = CouchbasePickler.macroRW
   }
 
   /**
@@ -159,7 +160,7 @@ object SearchFacetResult {
   ) extends SearchFacetResult
 
   private[scala] object TermSearchFacetResult {
-    implicit val rw: circe.Codec[TermSearchFacetResult] = semiauto.deriveCodec
+    implicit val rw: CouchbasePickler.ReadWriter[TermSearchFacetResult] = CouchbasePickler.macroRW
   }
 
   /**
@@ -171,6 +172,6 @@ object SearchFacetResult {
   case class TermRange(term: String, count: Long)
 
   private[scala] object TermRange {
-    implicit val rw: circe.Codec[TermRange] = semiauto.deriveCodec
+    implicit val rw: CouchbasePickler.ReadWriter[TermRange] = CouchbasePickler.macroRW
   }
 }
