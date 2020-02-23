@@ -23,7 +23,7 @@ import com.couchbase.client.test.{Capabilities, IgnoreWhen, Util}
 import com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestTracer
 import io.opentelemetry.exporters.inmemory.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.TracerSdkFactory
-import io.opentelemetry.sdk.trace.export.SimpleSpansProcessor
+import io.opentelemetry.sdk.trace.`export`.SimpleSpansProcessor
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import org.junit.jupiter.api._
 
@@ -69,7 +69,7 @@ class ResponseTimeObservabilitySpec extends ScalaIntegrationTest {
   }
 
   @Test
-  def basicKV() {
+  def basicKV(): Unit = {
     val docId = UUID.randomUUID().toString
 
     val content = ujson.Obj("hello" -> "world")
@@ -84,7 +84,7 @@ class ResponseTimeObservabilitySpec extends ScalaIntegrationTest {
   }
 
   @Test
-  def reactiveKV() {
+  def reactiveKV(): Unit = {
     val docId = UUID.randomUUID().toString
 
     val content = ujson.Obj("hello" -> "world")
@@ -99,7 +99,7 @@ class ResponseTimeObservabilitySpec extends ScalaIntegrationTest {
   }
   @Test
   @IgnoreWhen(missesCapabilities = Array(Capabilities.QUERY))
-  def query() {
+  def query(): Unit = {
     cluster.query("select 'hello' as greeting").get
     waitForEvents(1)
 
@@ -109,7 +109,7 @@ class ResponseTimeObservabilitySpec extends ScalaIntegrationTest {
 
   @Test
   @IgnoreWhen(missesCapabilities = Array(Capabilities.ANALYTICS))
-  def analytics() {
+  def analytics(): Unit = {
     cluster.analyticsQuery("select 'hello' as greeting").get
     waitForEvents(1)
 
