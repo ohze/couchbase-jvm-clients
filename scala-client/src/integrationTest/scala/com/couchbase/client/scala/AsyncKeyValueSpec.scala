@@ -3,11 +3,14 @@ package com.couchbase.client.scala
 import java.util.NoSuchElementException
 import java.util.concurrent.{CountDownLatch, Executors, ThreadFactory}
 
+import com.couchbase.client.scala.env.ClusterEnvironment
 import com.couchbase.client.scala.json.{JsonObject, JsonObjectSafe}
 import com.couchbase.client.scala.util.ScalaIntegrationTest
+import com.couchbase.client.test.ClusterAwareIntegrationTest
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import org.junit.jupiter.api.{BeforeAll, Test, TestInstance}
 
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.{Failure, Success}
 

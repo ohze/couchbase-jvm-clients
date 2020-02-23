@@ -30,7 +30,7 @@ import com.couchbase.client.scala.util.DurationConversions._
 import scala.compat.java8.FutureConverters._
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
-import io.circe.{Json, jawn}
+import io.circe.jawn
 
 @Stability.Volatile
 class AsyncSearchIndexManager(private[scala] val cluster: AsyncCluster)(
