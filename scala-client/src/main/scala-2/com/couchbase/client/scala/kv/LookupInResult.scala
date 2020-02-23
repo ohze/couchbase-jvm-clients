@@ -11,7 +11,7 @@ import com.couchbase.client.scala.codec.{JsonDeserializer, Transcoder}
 
 import scala.compat.java8.OptionConverters._
 import scala.concurrent.duration.Duration
-import scala.reflect.ClassTag
+import scala.reflect.runtime.universe._
 import scala.util.{Failure, Success, Try}
 
 /** The results of a SubDocument 'lookupIn' operation.
