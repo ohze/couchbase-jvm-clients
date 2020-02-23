@@ -16,9 +16,9 @@
 package com.couchbase.client.scala.manager.bucket
 
 import com.couchbase.client.core.annotation.Stability.{Internal, Volatile}
-import com.couchbase.client.scala.util.CouchbasePickler
 import io.circe.HCursor
 import io.circe
+import io.circe.generic.semiauto
 
 @Volatile
 sealed trait BucketType {
@@ -176,7 +176,7 @@ case class CreateBucketSettings(
 }
 
 object CreateBucketSettings {
-  implicit val rw: CouchbasePickler.ReadWriter[CreateBucketSettings] = CouchbasePickler.macroRW
+  implicit val rw: circe.Codec[CreateBucketSettings] = semiauto.deriveCodec
 }
 
 @Volatile

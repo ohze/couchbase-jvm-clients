@@ -452,7 +452,34 @@ case class QueryIndex(
 }
 
 object QueryIndex {
-  implicit val circeCodec: circe.Codec[QueryIndex] = semiauto.deriveCodec
+  // https://github.com/circe/circe/issues/1406
+//  implicit lazy val circeCodec: circe.Codec[QueryIndex] = semiauto.deriveCodec
+  implicit lazy val circeCodec: circe.Codec[QueryIndex] = {
+    import circe._
+    val d: Decoder[QueryIndex] =
+      Decoder.forProduct7(
+        "name",
+        "is_primary",
+        "using",
+        "state",
+        "keyspace_id",
+        "index_key",
+        "condition"
+      )(QueryIndex.apply)
+    val e: Encoder[QueryIndex] =
+      Encoder.forProduct7(
+        "name",
+        "is_primary",
+        "using",
+        "state",
+        "keyspace_id",
+        "index_key",
+        "condition"
+      )(
+        x => (x.name, x.is_primary, x.using, x.state, x.keyspace_id, x.index_key, x.condition)
+      )
+    circe.Codec.from(d, e)
+  }
 
   implicit val codec: Codec[QueryIndex] = Codec.codec[QueryIndex]
 }
