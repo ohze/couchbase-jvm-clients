@@ -27,18 +27,18 @@ import com.couchbase.client.scala.json.JsonArraySafe
 import com.couchbase.client.scala.kv._
 
 import scala.collection.mutable
+import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 import scala.util.{Failure, Success, Try}
 
 /** Presents a Scala Buffer interface on top of a mutable persistent data structure, in the form of a document stored
   * on the cluster.
   */
-class CouchbaseBuffer[T](
+class CouchbaseBuffer[T: JsonDeserializer: JsonSerializer: ClassTag](
     id: String,
     collection: Collection,
     options: Option[CouchbaseCollectionOptions] = None
-)(implicit decode: JsonDeserializer[T], encode: JsonSerializer[T], tag: WeakTypeTag[T])
-    extends mutable.AbstractBuffer[T] {
+) extends mutable.AbstractBuffer[T] {
 
   protected val opts: CouchbaseCollectionOptions = options match {
     case Some(v) => v

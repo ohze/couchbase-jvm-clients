@@ -35,16 +35,28 @@ class LegacyTranscoder() extends TranscoderWithSerializer {
     }
   }
 
-  override def decode[T](input: Array[Byte], flags: Int, serializer: JsonDeserializer[T])(
-      implicit tag: WeakTypeTag[T]
+  override def decode[T](
+      value: Array[Byte],
+      flags: Int,
+      serializer: JsonDeserializer[T]
   ): Try[T] = {
-    if (tag.mirror.runtimeClass(tag.tpe).isAssignableFrom(classOf[Array[Byte]])) {
-      Success(input.asInstanceOf[T])
-    } else if (tag.mirror.runtimeClass(tag.tpe).isAssignableFrom(classOf[String])) {
-      Success(new String(input, StandardCharsets.UTF_8).asInstanceOf[T])
-    } else {
-      serializer.deserialize(input)
-    }
+    serializer.deserialize(value)
+  }
+
+  override def decodeToByteArray(
+      value: Array[Byte],
+      flags: Int,
+      deserializer: JsonDeserializer[Array[Byte]]
+  ): Try[Array[Byte]] = {
+    Success(value)
+  }
+
+  override def decodeToString(
+      value: Array[Byte],
+      flags: Int,
+      deserializer: JsonDeserializer[String]
+  ): Try[String] = {
+    Success(new String(value, StandardCharsets.UTF_8))
   }
 }
 

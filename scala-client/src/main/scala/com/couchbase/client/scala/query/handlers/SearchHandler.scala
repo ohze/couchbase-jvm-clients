@@ -142,45 +142,39 @@ object SearchHandler {
     if (rawFacets == null || rawFacets.isEmpty) {
       Map.empty
     } else {
+      import io.circe.{JsonObject, jawn}
 
-      val tree: ujson.Value = ujson.read(rawFacets)
-      val facets            = collection.mutable.Map.empty[String, SearchFacetResult]
+      val tree   = jawn.decodeByteArray[JsonObject](rawFacets)
+      val facets = collection.mutable.Map.empty[String, SearchFacetResult]
 
       tree match {
-        case x: ujson.Obj =>
-          x.value.foreach(kv => {
-            val key        = kv._1
-            val entry      = kv._2
-            val facetEntry = entry.asInstanceOf[ujson.Obj]
-
-            val field   = facetEntry.value("field").str
-            val total   = facetEntry.value("total").num.longValue()
-            val missing = facetEntry.value("missing").num.longValue()
-            val other   = facetEntry.value("other").num.longValue()
-
-            facetEntry.value.get("numeric_ranges") match {
-              case Some(tr) =>
-                val ranges = CouchbasePickler.read[Seq[NumericRange]](tr)
-                val result =
-                  NumericRangeSearchFacetResult(key, field, total, missing, other, ranges)
-                facets += key -> result
-              case _ =>
-                facetEntry.value.get("date_ranges") match {
-                  case Some(tr) =>
-                    val ranges = CouchbasePickler.read[Seq[DateRange]](tr)
-                    val result =
-                      DateRangeSearchFacetResult(key, field, total, missing, other, ranges)
-                    facets += key -> result
-                  case _ =>
-                    val terms = facetEntry.value.get("terms") match {
-                      case Some(tr) => CouchbasePickler.read[Seq[TermRange]](tr)
-                      case _        => Seq.empty
-                    }
-                    val result = TermSearchFacetResult(key, field, total, missing, other, terms)
-                    facets += key -> result
-                }
-            }
-          })
+        case Right(x) =>
+          x.toIterable.foreach {
+            case (key, facetEntry) =>
+              val c = facetEntry.hcursor
+              for {
+                field   <- c.get[String]("field")
+                total   <- c.get[Long]("total")
+                missing <- c.get[Long]("missing")
+                other   <- c.get[Long]("other")
+              } c.get[Seq[NumericRange]]("numeric_ranges") match {
+                case Right(ranges) =>
+                  val result =
+                    NumericRangeSearchFacetResult(key, field, total, missing, other, ranges)
+                  facets += key -> result
+                case _ =>
+                  c.get[Seq[DateRange]]("date_ranges") match {
+                    case Right(ranges) =>
+                      val result =
+                        DateRangeSearchFacetResult(key, field, total, missing, other, ranges)
+                      facets += key -> result
+                    case _ =>
+                      val terms  = c.get[Seq[TermRange]]("terms").getOrElse(Seq.empty)
+                      val result = TermSearchFacetResult(key, field, total, missing, other, terms)
+                      facets += key -> result
+                  }
+              }
+          }
         case _ =>
       }
       facets.toMap

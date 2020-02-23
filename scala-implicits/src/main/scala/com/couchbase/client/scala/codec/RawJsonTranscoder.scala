@@ -38,19 +38,20 @@ class RawJsonTranscoder extends TranscoderWithoutSerializer {
     }
   }
 
-  override def decode[T](value: Array[Byte], flags: Int)(
-      implicit tag: universe.WeakTypeTag[T]
-  ): Try[T] = {
-    if (tag.mirror.runtimeClass(tag.tpe).isAssignableFrom(classOf[Array[Byte]])) {
-      Success(value.asInstanceOf[T])
-    } else if (tag.mirror.runtimeClass(tag.tpe).isAssignableFrom(classOf[String])) {
-      Success(new String(value, StandardCharsets.UTF_8).asInstanceOf[T])
-    } else
-      Failure(
-        new DecodingFailureException(
-          "RawJsonTranscoder can only decode into Array[Byte] or String!"
-        )
+  override def decode[T](value: Array[Byte], flags: Int): Try[T] = {
+    Failure(
+      new DecodingFailureException(
+        "RawJsonTranscoder can only decode into Array[Byte] or String!"
       )
+    )
+  }
+
+  override def decodeToByteArray(value: Array[Byte], flags: Int): Try[Array[Byte]] = {
+    Success(value)
+  }
+
+  override def decodeToString(value: Array[Byte], flags: Int): Try[String] = {
+    Success(new String(value, StandardCharsets.UTF_8))
   }
 }
 

@@ -34,12 +34,16 @@ class RawStringTranscoder extends TranscoderWithoutSerializer {
     }
   }
 
-  override def decode[T](value: Array[Byte], flags: Int)(
-      implicit tag: universe.WeakTypeTag[T]
-  ): Try[T] = {
-    if (tag.mirror.runtimeClass(tag.tpe).isAssignableFrom(classOf[String])) {
-      Success(new String(value, StandardCharsets.UTF_8).asInstanceOf[T])
-    } else Failure(new DecodingFailureException("RawStringTranscoder can only decode into String!"))
+  override def decode[T](value: Array[Byte], flags: Int): Try[T] = {
+    Failure(new DecodingFailureException("RawStringTranscoder can only decode into String!"))
+  }
+
+  override def decodeToByteArray(value: Array[Byte], flags: Int): Try[Array[Byte]] = {
+    Failure(new DecodingFailureException("RawStringTranscoder can only decode into String!"))
+  }
+
+  override def decodeToString(value: Array[Byte], flags: Int): Try[String] = {
+    Success(new String(value, StandardCharsets.UTF_8))
   }
 }
 

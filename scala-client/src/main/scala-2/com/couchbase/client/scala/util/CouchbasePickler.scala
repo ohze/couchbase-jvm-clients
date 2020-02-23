@@ -1,7 +1,5 @@
 package com.couchbase.client.scala.util
 
-import ujson.ParseException
-
 /** Customizes upickle serialization for our needs.
   */
 object CouchbasePickler extends upickle.AttributeTagged {

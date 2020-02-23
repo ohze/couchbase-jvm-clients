@@ -17,11 +17,10 @@
 package com.couchbase.client.scala.manager.user
 
 import com.couchbase.client.core.annotation.Stability.Volatile
-import com.couchbase.client.scala.manager.user.AuthDomain.{External, Local}
-import com.couchbase.client.scala.util.CouchbasePickler
-import upickle.default.{macroRW, ReadWriter => RW}
-
-import scala.util.Try
+import com.couchbase.client.scala.util.{CouchbasePickler, given _}
+import io.circe
+import io.circe.Decoder.Result
+import io.circe.{HCursor, Json}
 
 /** Identifies a specific permission possessed by a user.
   *
@@ -42,21 +41,19 @@ case class Role(name: String, bucket: Option[String] = None) {
 
 object Role {
   // Get back "role":"admin" but want to store it as a Role, so custom serialization logic
-  implicit val rw: CouchbasePickler.ReadWriter[Role] = CouchbasePickler
-    .readwriter[ujson.Obj]
-    .bimap[Role](
-      (x: Role) => {
-        val out = ujson.Obj("role" -> x.name)
-        x.bucket.foreach(bucket => out("bucket") = bucket)
-        out
-      },
-      (json: ujson.Obj) => {
-        Role(
-          Try(json("role").str).getOrElse("COULD NOT PARSE"),
-          Try(Some(json("bucket_name").str)).getOrElse(None)
-        )
-      }
-    )
+  implicit val rw: circe.Codec[Role] = new circe.Codec[Role] {
+    def apply(c: HCursor): Result[Role] =
+      for {
+        role   <- c.getOrElse[String]("role")("COULD NOT PARSE")
+        bucket <- c.getOrElse[Option[String]]("bucket_name")(None)
+      } yield Role(role, bucket)
+
+    def apply(a: Role): Json = {
+      val out = circe.JsonObject("role" -> a.name)
+      a.bucket.foreach(out.add("bucket", _))
+      Json.fromJsonObject(out)
+    }
+  }
 }
 
 /** Associates a role with its display name and description.
@@ -70,24 +67,20 @@ case class RoleAndDescription(role: Role, displayName: String, description: Stri
 
 object RoleAndDescription {
   // Get back "role":"admin" but want to store it as a Role, so custom serialization logic
-  implicit val rw: CouchbasePickler.ReadWriter[RoleAndDescription] = CouchbasePickler
-    .readwriter[ujson.Obj]
-    .bimap[RoleAndDescription](
-      (x: RoleAndDescription) => {
-        ujson.Obj(
-          "role" -> x.role.name,
-          "name" -> x.displayName,
-          "desc" -> x.description
-        )
-      },
-      (json: ujson.Obj) => {
-        RoleAndDescription(
-          Role(Try(json("role").str).getOrElse("COULD NOT PARSE")),
-          Try(json("name").str).getOrElse("COULD NOT PARSE"),
-          Try(json("desc").str).getOrElse("COULD NOT PARSE")
-        )
-      }
+  implicit val rw: circe.Codec[RoleAndDescription] = new circe.Codec[RoleAndDescription] {
+    def apply(c: HCursor): Result[RoleAndDescription] =
+      for {
+        role <- c.getOrElse[String]("role")("COULD NOT PARSE")
+        name <- c.getOrElse[String]("name")("COULD NOT PARSE")
+        desc <- c.getOrElse[String]("desc")("COULD NOT PARSE")
+      } yield RoleAndDescription(Role(role), name, desc)
+
+    def apply(x: RoleAndDescription): Json = Json.obj(
+      "role" -> x.role.name,
+      "name" -> x.displayName,
+      "desc" -> x.description
     )
+  }
 }
 
 /** Indicates why the user has a specific role.
@@ -105,7 +98,13 @@ case class Origin(@upickle.implicits.key("type") typ: String, name: Option[Strin
 }
 
 object Origin {
-  implicit val rw: CouchbasePickler.ReadWriter[Origin] = CouchbasePickler.macroRW
+  import circe._
+
+  implicit val rw: Codec[Origin] = {
+    val d: Decoder[Origin] = Decoder.forProduct2("type", "name")(Origin.apply)
+    val e: Encoder[Origin] = Encoder.forProduct2("type", "name")(x => (x.typ, x.name))
+    Codec.from(d, e)
+  }
 }
 
 /** Associates a role with its origins.
@@ -126,24 +125,19 @@ case class RoleAndOrigins(role: Role, origins: Seq[Origin]) {
 }
 
 object RoleAndOrigins {
+  import io.circe.syntax._
   // Get back "role":"admin" but want to store it as a Role, so custom serialization logic
-  implicit val rw: CouchbasePickler.ReadWriter[RoleAndOrigins] = CouchbasePickler
-    .readwriter[ujson.Obj]
-    .bimap[RoleAndOrigins](
-      (x: RoleAndOrigins) => {
-        val json = ujson.Obj()
-        json("role") = x.role.name
-        json("origins") = CouchbasePickler.write(x.origins)
-        json
-      },
-      (json: ujson.Obj) => {
-        val origins                    = Try(json("origins")).toOption
-        val bucketName: Option[String] = Try(json("bucket_name").str).toOption
+  implicit val rw: circe.Codec[RoleAndOrigins] = new circe.Codec[RoleAndOrigins] {
+    def apply(c: HCursor): Result[RoleAndOrigins] =
+      for {
+        role       <- c.get[String]("role")
+        bucketName <- c.get[Option[String]]("bucket_name")
+        origins    <- c.getOrElse[Seq[Origin]]("origins")(Seq.empty)
+      } yield RoleAndOrigins(Role(role, bucketName), origins)
 
-        RoleAndOrigins(
-          Role(json("role").str, bucketName),
-          origins.map(v => CouchbasePickler.read[Seq[Origin]](v)).getOrElse(Seq())
-        )
-      }
+    def apply(x: RoleAndOrigins): Json = Json.obj(
+      "role"    -> x.role.name,
+      "origins" -> x.origins.asJson
     )
+  }
 }
