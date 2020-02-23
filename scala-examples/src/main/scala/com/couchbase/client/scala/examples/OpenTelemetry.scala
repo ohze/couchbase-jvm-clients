@@ -27,7 +27,7 @@ import com.couchbase.client.scala.{Cluster, ClusterOptions}
 import com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestTracer
 import io.opentelemetry.exporters.inmemory.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.TracerSdkFactory
-import io.opentelemetry.sdk.trace.export.SimpleSpansProcessor
+import io.opentelemetry.sdk.trace.`export`.SimpleSpansProcessor
 
 import scala.util.{Failure, Success}
 
