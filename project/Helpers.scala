@@ -1,6 +1,6 @@
 import net.aichler.jupiter.sbt.JupiterPlugin
 import sbt.Keys._
-import sbt._
+import sbt.{Def, _}
 import org.scalafmt.sbt.ScalafmtPlugin.scalafmtConfigSettings
 import com.etsy.sbt.checkstyle.CheckstylePlugin.autoImport.checkstyleSettings
 
@@ -9,6 +9,29 @@ object Helpers {
     case v if v.startsWith("1.") => v.substring(2).toInt
     case v                       => v.toInt
   }
+
+  /** Add sourceDirectory / [scala-2, scala-3, scala-2.12, scala-2.13+,..] to unmanagedSourceDirectories
+    * This setting don't have a Configuration scope axis
+    * So, when use, we need (for `Compile` Configuration): `inConfig(Compile)(Seq(scalaSourceDirsSetting))` */
+  lazy val scalaSourceDirsSetting = unmanagedSourceDirectories ++= {
+    val sourceDir             = sourceDirectory.value
+    val Some((m, n)) = CrossVersion.partialVersion(scalaVersion.value)
+    val major                 = if (m == 0) 3 else m
+
+    // https://docs.scala-lang.org/overviews/core/collections-migration-213.html#how-do-i-cross-build-my-project-against-scala-212-and-scala-213
+    val coll213 = (major, n) match {
+      case (2, n) if n >= 13 => Seq("2.13+")
+      case (2, _)            => Seq("2.13-")
+      case _                 => Nil
+    }
+
+    val all = Seq(major.toString, s"$m.$n") ++ coll213
+    all.map(s => sourceDir / s"scala-$s")
+  }
+
+  lazy val commonScalaSourceDirsSetting: Seq[Def.Setting[_]] =
+    inConfig(Compile)(Seq(scalaSourceDirsSetting)) ++
+    inConfig(Compile)(Seq(scalaSourceDirsSetting))
 
   /** Redefine the IntegrationTest Configuration to extend the Test configuration
     * instead of the Runtime Configuration (the default).
@@ -27,7 +50,8 @@ object Helpers {
       scalafmtConfigSettings ++
         JupiterPlugin.scopedSettings ++
         Seq(
-          sourceDirectory := baseDirectory.value / "src" / "integrationTest"
+          sourceDirectory := baseDirectory.value / "src" / "integrationTest",
+          scalaSourceDirsSetting
         )
     )
 
