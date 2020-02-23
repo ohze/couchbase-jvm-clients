@@ -33,8 +33,8 @@ import com.couchbase.client.core.retry.RetryStrategy
 import com.couchbase.client.core.util.UrlQueryStringBuilder
 import com.couchbase.client.core.util.UrlQueryStringBuilder.urlEncode
 import com.couchbase.client.scala.manager.ManagerUtil
-import com.couchbase.client.scala.util.CouchbasePickler
 import com.couchbase.client.scala.util.DurationConversions._
+import io.circe.jawn
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.concurrent.duration.Duration
@@ -108,12 +108,10 @@ class ReactiveUserManager(private val core: Core) {
         if (response.status == ResponseStatus.NOT_FOUND) {
           SMono.raiseError(new UserNotFoundException(domain.alias, username))
         } else
-          checkStatus(response, "get " + domain + " user [" + redactUser(username) + "]") match {
-            case Failure(err) => SMono.raiseError(err)
-            case _ =>
-              val value = CouchbasePickler.read[UserAndMetadata](response.content)
-              SMono.just(value)
-          }
+          SMono.fromTry(
+            checkStatus(response, "get " + domain + " user [" + redactUser(username) + "]")
+              .flatMap(_ => jawn.decodeByteArray[UserAndMetadata](response.content).toTry)
+          )
       })
   }
 
@@ -128,8 +126,9 @@ class ReactiveUserManager(private val core: Core) {
         checkStatus(response, "get all users") match {
           case Failure(err) => SFlux.raiseError(err)
           case _ =>
-            val value = CouchbasePickler.read[Seq[UserAndMetadata]](response.content)
-            SFlux.fromIterable(value)
+            jawn
+              .decodeByteArray[Seq[UserAndMetadata]](response.content)
+              .fold(err => SFlux.raiseError(err), SFlux.fromIterable)
         }
       })
   }
@@ -196,8 +195,9 @@ class ReactiveUserManager(private val core: Core) {
           case Failure(err) => SFlux.raiseError(err)
           case _ =>
             val converted = ReactiveUserManager.convertRoles(response.content())
-            val values    = CouchbasePickler.read[Seq[RoleAndDescription]](converted)
-            SFlux.fromIterable(values)
+            jawn
+              .decodeByteArray[Seq[RoleAndDescription]](converted)
+              .fold(err => SFlux.raiseError(err), SFlux.fromIterable)
         }
       })
   }
@@ -213,12 +213,10 @@ class ReactiveUserManager(private val core: Core) {
         if (response.status == ResponseStatus.NOT_FOUND) {
           SMono.raiseError(new GroupNotFoundException(groupName))
         } else {
-          checkStatus(response, "get group [" + redactMeta(groupName) + "]") match {
-            case Failure(err) => SMono.raiseError(err)
-            case _ =>
-              val value = CouchbasePickler.read[Group](response.content)
-              SMono.just(value)
-          }
+          SMono.fromTry(
+            checkStatus(response, "get group [" + redactMeta(groupName) + "]")
+              .flatMap(_ => jawn.decodeByteArray[Group](response.content).toTry)
+          )
         }
       })
   }
@@ -233,8 +231,9 @@ class ReactiveUserManager(private val core: Core) {
         checkStatus(response, "get all groups") match {
           case Failure(err) => SFlux.raiseError(err)
           case _ =>
-            val values = CouchbasePickler.read[Seq[Group]](response.content())
-            SFlux.fromIterable(values)
+            jawn
+              .decodeByteArray[Seq[Group]](response.content)
+              .fold(err => SFlux.raiseError(err), SFlux.fromIterable)
         }
       })
   }

@@ -64,8 +64,32 @@ case class GetResult(
       case Left(bytes) =>
         // Regular case
         transcoder match {
-          case t: TranscoderWithSerializer    => t.decode(bytes, flags, deserializer)
-          case t: TranscoderWithoutSerializer => t.decode(bytes, flags)
+          case t: TranscoderWithSerializer =>
+            if (weakTypeOf[Array[Byte]] <:< tt.tpe) {
+              t.decodeToByteArray(
+                  bytes,
+                  flags,
+                  deserializer.asInstanceOf[JsonDeserializer[Array[Byte]]]
+                )
+                .asInstanceOf[Try[T]]
+            } else if (weakTypeOf[String] <:< tt.tpe) {
+              t.decodeToString(
+                  bytes,
+                  flags,
+                  deserializer.asInstanceOf[JsonDeserializer[String]]
+                )
+                .asInstanceOf[Try[T]]
+            } else {
+              t.decode(bytes, flags, deserializer)
+            }
+          case t: TranscoderWithoutSerializer =>
+            if (weakTypeOf[Array[Byte]] <:< tt.tpe) {
+              t.decodeToByteArray(bytes, flags).asInstanceOf[Try[T]]
+            } else if (weakTypeOf[String] <:< tt.tpe) {
+              t.decodeToString(bytes, flags).asInstanceOf[Try[T]]
+            } else {
+              t.decode(bytes, flags)
+            }
         }
 
       case Right(obj) =>

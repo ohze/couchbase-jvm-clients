@@ -1,19 +1,13 @@
 package com.couchbase.client.scala.util
 
-/** Customizes upickle serialization for our needs.
-  */
-object CouchbasePickler extends upickle.AttributeTagged {
-  // upickle writes Options as [] and ["value"] by default, which isn't that useful
-  // IntelliJ complains about this, but the compiler is fine
-  override implicit def OptionWriter[T: Writer]: Writer[Option[T]] =
-    implicitly[Writer[T]].comap[Option[T]] {
-      case None    => null.asInstanceOf[T]
-      case Some(x) => x
-    }
+import io.circe.{Codec, Decoder, jawn}
 
-  override implicit def OptionReader[T: Reader]: Reader[Option[T]] =
-    implicitly[Reader[T]].mapNulls {
-      case null => None
-      case x    => Some(x)
-    }
+/** Alias to circe.Codec & jawn.decode
+  * We don't need this object for scala 3.
+  * But with this, we can keep common code (for both scala 2 & 3) unchanged */
+private[scala] object CouchbasePickler {
+  @inline def read[T: Decoder](input: Array[Byte]): T = jawn.decodeByteArray(input).toTry.get
+  @inline def read[T: Decoder](input: String): T = jawn.decode(input).toTry.get
+  type ReadWriter[T] = Codec[T]
+//  inline final def macroRW[A](given inline A: Mirror.Of[A]): Codec.AsObject[A] = Codec.AsObject.derived[A]
 }

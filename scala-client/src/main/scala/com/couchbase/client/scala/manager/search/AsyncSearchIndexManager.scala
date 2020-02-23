@@ -25,13 +25,12 @@ import com.couchbase.client.core.msg.search.{GenericSearchRequest, GenericSearch
 import com.couchbase.client.core.retry.RetryStrategy
 import com.couchbase.client.core.util.UrlQueryStringBuilder.urlEncode
 import com.couchbase.client.scala.AsyncCluster
-import com.couchbase.client.scala.util.CouchbasePickler
 import com.couchbase.client.scala.util.DurationConversions._
 
 import scala.compat.java8.FutureConverters._
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
-import io.circe.Json
+import io.circe.{Json, jawn}
 
 @Stability.Volatile
 class AsyncSearchIndexManager(private[scala] val cluster: AsyncCluster)(
@@ -59,10 +58,15 @@ class AsyncSearchIndexManager(private[scala] val cluster: AsyncCluster)(
     val request = getIndexRequest(indexName, timeout, retryStrategy)
     core.send(request)
     val out = request.response.toScala
-      .map((response: GenericSearchResponse) => {
-        val read = CouchbasePickler.read[SearchIndexWrapper](response.content())
-        read.indexDef.copy(numPlanPIndexes = read.numPlanPIndexes)
-      })
+      .map { (response: GenericSearchResponse) =>
+        jawn
+          .decodeByteArray[SearchIndexWrapper](response.content())
+          .map { read =>
+            read.indexDef.copy(numPlanPIndexes = read.numPlanPIndexes)
+          }
+          .toTry
+      }
+      .flatMap { Future.fromTry }
       .transform(identity, transformer(indexName))
     out.onComplete(_ => request.context.logicallyComplete())
     out
@@ -167,8 +171,9 @@ class AsyncSearchIndexManager(private[scala] val cluster: AsyncCluster)(
 object AsyncSearchIndexManager {
   // This can throw, so should be called inside a Future operator
   private[scala] def parseIndexes(in: Array[Byte]): Seq[SearchIndex] = {
-    val json       = CouchbasePickler.read[Json](in)
-    val allIndexes = json.hcursor.get[SearchIndexesWrapper]("indexDefs").toOption.get
-    allIndexes.indexDefs.values.toSeq
-  }
+    for {
+      json       <- jawn.parseByteArray(in)
+      allIndexes <- json.hcursor.get[SearchIndexesWrapper]("indexDefs")
+    } yield allIndexes.indexDefs.values.toSeq
+  }.toOption.get
 }

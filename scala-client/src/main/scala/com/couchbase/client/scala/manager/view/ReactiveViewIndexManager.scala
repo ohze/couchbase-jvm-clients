@@ -315,7 +315,7 @@ object ReactiveViewIndexManager {
     }.toOption.flatten
 
     val either = for {
-      json <- io.circe.jawn.decodeByteArray[Json](in)
+      json <- io.circe.jawn.parseByteArray(in)
       rows <- json.hcursor.get[Seq[Json]]("rows")
     } yield rows.flatMap(parseRow)
 
