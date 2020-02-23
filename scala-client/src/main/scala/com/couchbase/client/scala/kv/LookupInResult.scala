@@ -11,6 +11,7 @@ import com.couchbase.client.scala.codec.{JsonDeserializer, Transcoder}
 
 import scala.compat.java8.OptionConverters._
 import scala.concurrent.duration.Duration
+import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 import scala.util.{Failure, Success, Try}
 
@@ -47,7 +48,7 @@ case class LookupInResult(
     */
   def contentAs[T](
       index: Int
-  )(implicit deserializer: JsonDeserializer[T], tag: WeakTypeTag[T]): Try[T] = {
+  )(implicit deserializer: JsonDeserializer[T], tag: ClassTag[T]): Try[T] = {
     if (index < 0 || index >= content.size) {
       Failure(
         new InvalidArgumentException(
@@ -63,7 +64,7 @@ case class LookupInResult(
         case _ =>
           field.`type` match {
             case SubdocCommandType.EXISTS =>
-              if (tag.mirror.runtimeClass(tag.tpe).isAssignableFrom(classOf[Boolean])) {
+              if (tag.runtimeClass.isAssignableFrom(classOf[Boolean])) {
                 val exists = field.status == SubDocumentOpResponseStatus.SUCCESS
                 Success(exists.asInstanceOf[T])
               } else {

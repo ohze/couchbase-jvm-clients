@@ -33,9 +33,22 @@ object TranscoderSpec {
       JsonTranscoder.Instance.encode(value, serializer)
     }
 
-    def decode[A](value: Array[Byte], flags: Int, serializer: JsonDeserializer[A])(
-        implicit tag: WeakTypeTag[A]
-    ): Try[A] = JsonTranscoder.Instance.decode(value, flags, serializer)
+    def decode[A](value: Array[Byte], flags: Int, serializer: JsonDeserializer[A]): Try[A] =
+      JsonTranscoder.Instance.decode(value, flags, serializer)
+
+    override def decodeToByteArray(
+        value: Array[Byte],
+        flags: Int,
+        deserializer: JsonDeserializer[Array[Byte]]
+    ): Try[Array[Byte]] =
+      JsonTranscoder.Instance.decodeToByteArray(value, flags, deserializer)
+
+    def decodeToString(
+        value: Array[Byte],
+        flags: Int,
+        deserializer: JsonDeserializer[String]
+    ): Try[String] =
+      JsonTranscoder.Instance.decodeToString(value, flags, deserializer)
   }
 }
 

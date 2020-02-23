@@ -16,13 +16,9 @@
 package com.couchbase.client.scala.manager.bucket
 
 import com.couchbase.client.core.annotation.Stability.{Internal, Volatile}
-import com.couchbase.client.scala.manager.bucket.BucketType.{Couchbase, Ephemeral, Memcached}
-import com.couchbase.client.scala.manager.bucket.EjectionMethod.{FullEviction, ValueOnly}
-import com.couchbase.client.scala.manager.user.AuthDomain.{External, Local}
-import com.couchbase.client.scala.manager.user._
 import com.couchbase.client.scala.util.CouchbasePickler
-
-import scala.util.Try
+import io.circe.HCursor
+import io.circe
 
 @Volatile
 sealed trait BucketType {
@@ -43,17 +39,14 @@ object BucketType {
     override def alias: String = "ephemeral"
   }
 
-  implicit val rw: CouchbasePickler.ReadWriter[BucketType] = CouchbasePickler
-    .readwriter[String]
-    .bimap[BucketType](
-      x => x.alias,
-      str =>
-        str match {
-          case "membase"   => Couchbase
-          case "memcached" => Memcached
-          case "ephemeral" => Ephemeral
-        }
-    )
+  implicit val rw: circe.Codec[BucketType] = circe.Codec.from(
+    circe.Decoder.decodeString.map {
+      case "membase"   => Couchbase
+      case "memcached" => Memcached
+      case "ephemeral" => Ephemeral
+    },
+    circe.Encoder.encodeString.contramap[BucketType](_.alias)
+  )
 }
 @Volatile
 sealed trait EjectionMethod {
@@ -70,16 +63,13 @@ object EjectionMethod {
     override def alias: String = "valueOnly"
   }
 
-  implicit val rw: CouchbasePickler.ReadWriter[EjectionMethod] = CouchbasePickler
-    .readwriter[String]
-    .bimap[EjectionMethod](
-      x => x.alias,
-      str =>
-        str match {
-          case "fullEviction" => FullEviction
-          case "valueOnly"    => ValueOnly
-        }
-    )
+  implicit val rw: circe.Codec[EjectionMethod] = circe.Codec.from(
+    circe.Decoder.decodeString.map {
+      case "fullEviction" => FullEviction
+      case "valueOnly"    => ValueOnly
+    },
+    circe.Encoder.encodeString.contramap[EjectionMethod](_.alias)
+  )
 }
 
 @Volatile
@@ -101,17 +91,14 @@ object CompressionMode {
     override def alias: String = "active"
   }
 
-  implicit val rw: CouchbasePickler.ReadWriter[CompressionMode] = CouchbasePickler
-    .readwriter[String]
-    .bimap[CompressionMode](
-      x => x.alias,
-      str =>
-        str match {
-          case "off"     => Off
-          case "passive" => Passive
-          case "active"  => Active
-        }
-    )
+  implicit val rw: circe.Codec[CompressionMode] = circe.Codec.from(
+    circe.Decoder.decodeString.map {
+      case "off"     => Off
+      case "passive" => Passive
+      case "active"  => Active
+    },
+    circe.Encoder.encodeString.contramap[CompressionMode](_.alias)
+  )
 
 }
 
@@ -130,16 +117,13 @@ object ConflictResolutionType {
     override def alias: String = "seqno"
   }
 
-  implicit val rw: CouchbasePickler.ReadWriter[ConflictResolutionType] = CouchbasePickler
-    .readwriter[String]
-    .bimap[ConflictResolutionType](
-      x => x.alias,
-      str =>
-        str match {
-          case "lww"   => Timestamp
-          case "seqno" => SequenceNumber
-        }
-    )
+  implicit val rw: circe.Codec[ConflictResolutionType] = circe.Codec.from(
+    circe.Decoder.decodeString.map {
+      case "lww"   => Timestamp
+      case "seqno" => SequenceNumber
+    },
+    circe.Encoder.encodeString.contramap[ConflictResolutionType](_.alias)
+  )
 }
 @Volatile
 case class CreateBucketSettings(
@@ -229,39 +213,38 @@ case class BucketSettings(
 }
 
 object BucketSettings {
-  implicit val rw: CouchbasePickler.ReadWriter[BucketSettings] = CouchbasePickler
-    .readwriter[ujson.Obj]
-    .bimap[BucketSettings](
-      (x: BucketSettings) => {
-        // Serialization not used
-        ujson.Obj()
-      },
-      (json: ujson.Obj) => {
-        val flushEnabled = Try(json("flush").bool).toOption.getOrElse(false)
-        val rawRAM       = json("quota")("rawRAM").num.toInt
-        val ramMB        = rawRAM / (1024 * 1024)
-        val numReplicas  = json("replicaNumber").num.toInt
-        val nodes        = json("nodes").arr
-        val isHealthy    = nodes.nonEmpty && !nodes.exists(_.obj("status").str != "healthy")
-        // Next two parameters only available post 5.X
-        val maxTTL = json.value.get("maxTTL").map(_.num.toInt).getOrElse(0)
-        val compressionMode = json.value
-          .get("compressionMode")
-          .map(v => CouchbasePickler.read[CompressionMode](v))
-          .getOrElse(CompressionMode.Off)
 
-        BucketSettings(
-          json("name").str,
-          flushEnabled,
-          ramMB,
-          numReplicas,
-          Try(json("replicaIndex").bool).toOption.getOrElse(false),
-          CouchbasePickler.read[BucketType](json("bucketType")),
-          CouchbasePickler.read[EjectionMethod](json("evictionPolicy")),
-          maxTTL,
-          compressionMode,
-          isHealthy
+  implicit val rw: circe.Codec[BucketSettings] = new circe.Codec[BucketSettings] {
+    // Serialization not used
+    def apply(a: BucketSettings): circe.Json = circe.Json.obj()
+
+    def apply(c: HCursor): circe.Decoder.Result[BucketSettings] =
+      for {
+        name         <- c.get[String]("name")
+        flushEnabled <- c.getOrElse[Boolean]("flush")(false)
+        rawRAM       <- c.downField("quota").get[Int]("rawRAM")
+        ramMB = rawRAM / (1024 * 1024)
+        numReplicas     <- c.get[Int]("replicaNumber")
+        replicaIndexes  <- c.getOrElse[Boolean]("replicaIndex")(false)
+        bucketType      <- c.get[BucketType]("bucketType")
+        ejectionMethod  <- c.get[EjectionMethod]("evictionPolicy")
+        maxTTL          <- c.getOrElse[Int]("maxTTL")(0)
+        compressionMode <- c.getOrElse[CompressionMode]("compressionMode")(CompressionMode.Off)
+        nodes = c.downField("nodes").values.get
+        isHealthy = nodes.nonEmpty && nodes.forall(
+          _.hcursor.get[String]("status").contains("healthy")
         )
-      }
-    )
+      } yield BucketSettings(
+        name,
+        flushEnabled,
+        ramMB,
+        numReplicas,
+        replicaIndexes,
+        bucketType,
+        ejectionMethod,
+        maxTTL,
+        compressionMode,
+        isHealthy
+      )
+  }
 }

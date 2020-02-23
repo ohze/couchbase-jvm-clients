@@ -436,7 +436,7 @@ case class QueryIndex(
     private val keyspace_id: String,
     private val index_key: Seq[String],
     condition: Option[String]
-) {
+) derives io.circe.Codec.AsObject {
   def keyspaceId: String = keyspace_id
 
   def isPrimary: Boolean = is_primary.getOrElse(false)

@@ -31,7 +31,7 @@ import com.couchbase.client.scala.util.DurationConversions._
 import scala.compat.java8.FutureConverters._
 import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import io.circe.Json
 
 @Stability.Volatile
 class AsyncSearchIndexManager(private[scala] val cluster: AsyncCluster)(
@@ -167,9 +167,8 @@ class AsyncSearchIndexManager(private[scala] val cluster: AsyncCluster)(
 object AsyncSearchIndexManager {
   // This can throw, so should be called inside a Future operator
   private[scala] def parseIndexes(in: Array[Byte]): Seq[SearchIndex] = {
-    val json                             = CouchbasePickler.read[ujson.Obj](in)
-    val indexDefs                        = json.obj("indexDefs")
-    val allIndexes: SearchIndexesWrapper = CouchbasePickler.read[SearchIndexesWrapper](indexDefs)
+    val json       = CouchbasePickler.read[Json](in)
+    val allIndexes = json.hcursor.get[SearchIndexesWrapper]("indexDefs").toOption.get
     allIndexes.indexDefs.values.toSeq
   }
 }

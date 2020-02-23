@@ -23,18 +23,18 @@ import com.couchbase.client.scala.json.JsonArraySafe
 import com.couchbase.client.scala.kv._
 
 import scala.collection.mutable
+import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 import scala.util.{Failure, Success}
 
 /** Presents a Scala Set interface on top of a mutable persistent data structure, in the form of a document stored
   * on the cluster.
   */
-class CouchbaseSet[T](
+class CouchbaseSet[T: JsonDeserializer: JsonSerializer: ClassTag](
     id: String,
     collection: Collection,
     options: Option[CouchbaseCollectionOptions] = None
-)(implicit decode: JsonDeserializer[T], encode: JsonSerializer[T], tag: WeakTypeTag[T])
-    extends mutable.AbstractSet[T] {
+) extends mutable.AbstractSet[T] {
 
   private val opts: CouchbaseCollectionOptions = options match {
     case Some(v) => v
