@@ -47,23 +47,7 @@ lazy val javaModuleSettings = commonSettings ++ Seq(
   crossPaths := false        // drop off Scala suffix from artifact names and publish path
 )
 
-val scalaSourceDirsSetting = unmanagedSourceDirectories in Compile ++= {
-  val sourceDir             = (Compile / sourceDirectory).value
-  val Some((_major, minor)) = CrossVersion.partialVersion(scalaVersion.value)
-  val major                 = if (_major == 0) 3 else _major
-
-  // https://docs.scala-lang.org/overviews/core/collections-migration-213.html#how-do-i-cross-build-my-project-against-scala-212-and-scala-213
-  val coll213 = (major, minor) match {
-    case (2, n) if n >= 13 => Seq("2.13+")
-    case (2, _)            => Seq("2.13-")
-    case _                 => Nil
-  }
-
-  val all = Seq(major.toString, s"$major.$minor") ++ coll213
-  all.map(s => sourceDir / s"scala-$s")
-}
-
-lazy val scalaModuleSettings = commonSettings ++ scalaSourceDirsSetting ++ Seq(
+lazy val scalaModuleSettings = commonSettings ++ commonScalaSourceDirsSetting ++ Seq(
   logLevel := Level.Error, // TODO remove this
   version := "1.1.0-SNAPSHOT",
   scalaVersion := V.scala,
@@ -166,7 +150,8 @@ lazy val `core-io` = project
     exportJars := true,
     Compile / unmanagedJars += Def.taskDyn {
       val jar = (`core-io-deps` / assembly / assemblyOutputPath).value
-      if (jar.exists()) Def.task { jar } else `core-io-deps` / assembly
+      if (jar.exists()) Def.task { jar }
+      else `core-io-deps` / assembly
     }.value
   )
   .itConfig()
