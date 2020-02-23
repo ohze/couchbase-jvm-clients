@@ -28,6 +28,8 @@ import com.couchbase.client.scala.query.QueryScanConsistency.ConsistentWith
 import com.couchbase.client.scala.util.ScalaIntegrationTest
 import com.couchbase.client.scala.{Cluster, Collection, TestUtils}
 import com.couchbase.client.test.{Capabilities, IgnoreWhen}
+import io.circe
+import io.circe.generic.semiauto
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import org.junit.jupiter.api.{io => _, _}
 import reactor.core.scala.publisher.SMono
@@ -479,12 +481,17 @@ class QuerySpec extends ScalaIntegrationTest {
     assert(1 == rows.size)
   }
 
-  case class Address(line1: String) derives io.circe.Codec.AsObject
+  case class Address(line1: String) // derives AsObject
+  object Address {
+    implicit val circeCodec: circe.Codec[Address] = semiauto.deriveCodec
+  }
   // Need define case class & object here - not in caseClassesDecodedToN1QL method
   // or else, scala 2.11 will not compile, with error:
   // User is already defined as (compiler-generated) case class companion object User
-  case class User(name: String, age: Int, addresses: Seq[Address]) derives io.circe.Codec.AsObject
+  case class User(name: String, age: Int, addresses: Seq[Address])
   object User {
+    implicit val circeCodec: circe.Codec[User] = semiauto.deriveCodec
+
     implicit val codec: Codec[User] = Codec.codec[User]
   }
   // SCBC-70

@@ -19,7 +19,6 @@ import java.nio.charset.StandardCharsets
 import com.couchbase.client.core.error.DecodingFailureException
 import com.couchbase.client.core.msg.kv.CodecFlags
 
-import scala.reflect.runtime.universe
 import scala.util.{Failure, Success, Try}
 
 class RawStringTranscoder extends TranscoderWithoutSerializer {

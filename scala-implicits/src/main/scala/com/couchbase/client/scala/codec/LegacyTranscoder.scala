@@ -19,7 +19,6 @@ import java.nio.charset.StandardCharsets
 
 import com.couchbase.client.core.msg.kv.CodecFlags
 
-import scala.reflect.runtime.universe._
 import scala.util.{Success, Try}
 
 class LegacyTranscoder() extends TranscoderWithSerializer {
