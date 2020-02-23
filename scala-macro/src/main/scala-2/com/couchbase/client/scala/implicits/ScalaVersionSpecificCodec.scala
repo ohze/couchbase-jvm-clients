@@ -2,7 +2,7 @@ package com.couchbase.client.scala.implicits
 
 import scala.language.experimental.macros
 
-trait ScalaVersionSpecificCodec {
+private[scala] trait ScalaVersionSpecificCodec {
 
   /** Creates a `Codec` for the given type `T`, which is both a `JsonDeserializer[T]` and `JsonSerializer[T]`.  This is everything
     * required to send a case class directly to the Scala SDK, and retrieve results as it.
