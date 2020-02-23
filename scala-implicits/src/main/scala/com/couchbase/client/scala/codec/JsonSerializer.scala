@@ -41,6 +41,18 @@ trait JsonSerializer[-T] {
 /** Contains all built-in JsonSerializer, which allow a variety of types to be converted to be stored on Couchbase Server.
   */
 object JsonSerializer {
+//  import com.github.plokhotnyuk.jsoniter_scala.core.JsonValueCodec
+//  import com.github.plokhotnyuk.jsoniter_scala.core.{writeToArray => jsoniterWriteToArray}
+//
+//  /** Provide a JsonSerializer[T] if there is an implicit JsonValueCodec[T] in scope.
+//    *
+//    * @note SCBC-158: The underlying JsonValueCodec should be make with
+//    * {{{ CodecMakerConfig.withSetMaxInsertNumber(100000).withMapMaxInsertNumber(100000) }}}
+//    * The default number of items allowed in Sets and Maps is a conservative 1,024.
+//    * Adjusting this to an arbitrary 100k.
+//    * @see [[com.couchbase.client.scala.implicits.CodecImplicits.makeCodec]] */
+//  implicit def jsoniterEncode[T](implicit underlying: JsonValueCodec[T]): JsonSerializer[T] =
+//    input => Try(jsoniterWriteToArray(input)(underlying))
 
   /** `JsonSerializer` for `String`.
     *

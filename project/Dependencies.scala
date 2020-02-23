@@ -1,10 +1,13 @@
 import sbt.{Def, _}
 import Keys._
+import dotty.tools.sbtplugin.DottyPlugin.autoImport._
 
 object Dependencies {
   object V {
-    val crossScala     = Seq("2.13.1", "2.12.10", "2.11.12")
-    val scala          = "2.13.1"
+    val scala3         = "0.22.0-RC1" // dotty
+    val scala213       = "2.13.1"
+    val scala: String  = scala3 // default for scalaVersion SettingKey
+    val crossScala     = Seq(scala3, scala213, "2.12.10")
     val reactor        = "3.3.1.RELEASE"
     val slf4j          = "1.7.30"
     val netty          = "4.1.45.Final"
@@ -116,64 +119,68 @@ object Dependencies {
     log4jSlf4j
   )
 
-  /** upickle is `% Optional` in scala-implicits but not in scala-client */
-  private def upickle = Def.setting {
-    val v = CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 11)) => "0.7.4"
-      case _             => V.upickle
-    }
-    "com.lihaoyi" %% "upickle" % v
-  }
+  /** @note
+    *  + In scala 2 version, upickle is `% Optional` in scala-implicits but not in scala-client
+    *  + In scala 3 version, upickle is Optional in both scala-implicits and scala-client */
+  val upickle = "com.lihaoyi" %% "upickle" % V.upickle
 
-  private def scalaModuleOptionalDeps = Def.setting {
-    {
-      Seq(
-        // jsoniter, // don't need this. jsoniter-scala is not depended on jsoniter
-        json4s("native"),
-        json4s("jackson"),
-        jawnAst
-        // upickle(scalaVersion)
-      ) ++ (CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, 11)) =>
-          Seq(
-            circe("core") withRevision "0.11.2",
-            circe("generic") withRevision "0.11.2",
-            circe("parser") withRevision "0.11.2",
-            playJson withRevision "2.7.4"
-          )
-        case _ =>
-          Seq(
-            circe("core"),
-            circe("generic"),
-            circe("parser"),
-            playJson
-          )
-      })
-    }.map(_ % Optional)
+  private def scalaModuleCommonDeps = Def.setting {
+    val sv = scalaVersion.value
+
+    // Only need scala-collection-compat for scala < 2.13
+    val compat = CrossVersion.partialVersion(sv) match {
+      case Some((2, v)) if v < 13 => Seq(scalaCollCompat)
+      case _                      => Nil
+    }
+
+    val optionalDeps = Seq(
+      circe("core"),
+      circe("generic"),
+      // we don't need circe-parser which is depends on circe-jawn
+      circe("jawn")
+    ) ++ Seq(
+      //        circe("parser") intransitive (),
+      json4s("native"),
+      json4s("jackson"),
+      jawnAst,
+      playJson
+    ).map(_.withDottyCompat(sv))
+
+    compat ++ optionalDeps.map(_ % Optional)
   }
 
   def scalaImplicitsDeps = Def.setting {
-    Seq(
-      scalaCollCompat,
-      jsoniterScala("core"),
-      upickle.value % Optional
-    ) ++ scalaModuleOptionalDeps.value
+    val sv = scalaVersion.value
+
+    scalaModuleCommonDeps.value ++ Seq(
+      // jsoniterScala("core"),
+      upickle % Optional
+    ).map(_.withDottyCompat(sv))
   }
 
   def scalaClientDeps = Def.setting {
-    Seq(
+    val sv            = scalaVersion.value
+    val upickleConfig = if (isDotty.value) Optional else Compile
+
+    scalaModuleCommonDeps.value ++ Seq(
+      jacksonDatabind % Test
+    ) ++ Seq(
       reactorScala,
+      // This dependency is Optional because users only need this if they use
+      // com.couchbase.client.scala.implicits.Codec.codec[T]
+      // `intransitive` so that `scala-client` don't depends on scala-compiler
+      jsoniterScala("macros") % Optional intransitive (),
+      // Note: Only used in com.couchbase.client.scala.manager.analytics.AnalyticsDataset
       jsoniterScala("core"),
+      // jsoniter, // don't need this. jsoniter-scala is not depended on jsoniter
       scalaJava8Compat,
-      scalaCollCompat,
-      scalacheck      % Test,
-      jacksonDatabind % Test,
-      upickle.value,
+      scalacheck % Test,
+      upickle    % upickleConfig,
       // note: In pom.xml, some deps are declared both `% Optional` % `% Test`
       //, ex: json4s-jackson, jawn-ast, jackson-module-scala, circe-core, play-json
       // which caused maven warnings.
       // We re-declare here in sbt as `% Optional` only
       jacksonScala % Optional
-    ) ++ scalaModuleOptionalDeps.value
+    ).map(_.withDottyCompat(sv))
   }
 }

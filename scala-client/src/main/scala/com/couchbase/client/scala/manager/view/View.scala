@@ -16,4 +16,9 @@
 
 package com.couchbase.client.scala.manager.view
 
+import com.couchbase.client.scala.util.CouchbasePickler
+
 case class View(map: String, reduce: Option[String] = None)
+object View {
+  implicit val rw: CouchbasePickler.ReadWriter[View] = CouchbasePickler.macroRW
+}

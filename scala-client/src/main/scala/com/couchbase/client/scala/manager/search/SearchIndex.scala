@@ -15,20 +15,18 @@
  */
 package com.couchbase.client.scala.manager.search
 
-import java.nio.charset.StandardCharsets
-
 import com.couchbase.client.core.error.CouchbaseException
 import com.couchbase.client.scala.codec.JsonDeserializer
-import com.couchbase.client.scala.json.JsonObject
-import com.couchbase.client.scala.util.CouchbasePickler
-
+import com.couchbase.client.scala.util.{CouchbasePickler, given _}
+import io.circe.Decoder.Result
+import io.circe.Json
 import scala.util.{Failure, Try}
 
 private[scala] case class SearchIndexWrapper(
     indexDef: SearchIndex,
-    planPIndexes: Option[Seq[ujson.Obj]]
+    planPIndexes: Option[Seq[Json]]
 ) {
-  def numPlanPIndexes = planPIndexes match {
+  def numPlanPIndexes: Int = planPIndexes match {
     case Some(v) => v.size
     case _       => 0
   }
@@ -51,25 +49,16 @@ case class SearchIndex(
     // be present on an updated index.
     uuid: Option[String] = None,
     @upickle.implicits.key("type") typ: Option[String] = None,
-    private[scala] val params: Option[ujson.Obj] = None,
+    private[scala] val params: Option[Json] = None,
     @upickle.implicits.key("uuid") sourceUUID: Option[String] = None,
-    private[scala] val sourceParams: Option[ujson.Obj] = None,
+    private[scala] val sourceParams: Option[Json] = None,
     sourceType: Option[String] = None,
-    private[scala] val planParams: Option[ujson.Obj] = None,
+    private[scala] val planParams: Option[Json] = None,
     private[scala] val numPlanPIndexes: Int = 0
 ) {
-  private val DefaultSouceType = "couchbase"
-  private val DefaultType      = "fulltext-index"
+  import SearchIndex._
 
-  private[scala] def toJson: String = {
-    val output = JsonObject.create
-    uuid.foreach(v => output.put("uuid", v))
-    output.put("name", name)
-    output.put("sourceName", sourceName)
-    output.put("type", typ.getOrElse(DefaultType))
-    output.put("sourceType", sourceType.getOrElse(DefaultSouceType))
-    output.toString
-  }
+  private[scala] def toJson: String = rw(this).noSpaces
 
   def planParamsAs[T](implicit deserializer: JsonDeserializer[T]): Try[T] =
     convert(planParams, deserializer)
@@ -80,10 +69,10 @@ case class SearchIndex(
   def sourceParamsAs[T](implicit deserializer: JsonDeserializer[T]): Try[T] =
     convert(sourceParams, deserializer)
 
-  private def convert[T](value: Option[ujson.Obj], deserializer: JsonDeserializer[T]) = {
+  private def convert[T](value: Option[io.circe.Json], deserializer: JsonDeserializer[T]) = {
     value match {
       case Some(pp) =>
-        val bytes = upickle.default.write(pp).getBytes(StandardCharsets.UTF_8)
+        val bytes = io.circe.Printer.noSpaces.printToByteBuffer(pp).array()
         deserializer.deserialize(bytes)
       case _ => Failure(new CouchbaseException("Index does not contain this field"))
     }
@@ -91,9 +80,50 @@ case class SearchIndex(
 }
 
 object SearchIndex {
+  private val DefaultSouceType = "couchbase"
+  private val DefaultType      = "fulltext-index"
+
   def create(name: String, sourceName: String): SearchIndex = {
     SearchIndex(name, sourceName)
   }
 
-  implicit val rw: CouchbasePickler.ReadWriter[SearchIndex] = CouchbasePickler.macroRW
+  implicit val rw: io.circe.Codec[SearchIndex] = new io.circe.Codec[SearchIndex] {
+    import io.circe._
+
+    def apply(c: HCursor): Result[SearchIndex] =
+      for {
+        name            <- c.get[String]("name")
+        sourceName      <- c.get[String]("sourceName")
+        uuid            <- c.get[Option[String]]("uuid")
+        typ             <- c.get[Option[String]]("type")
+        params          <- c.get[Option[Json]]("params")
+        sourceParams    <- c.get[Option[Json]]("sourceParams")
+        sourceType      <- c.get[Option[String]]("sourceType")
+        planParams      <- c.get[Option[Json]]("planParams")
+        numPlanPIndexes <- c.getOrElse[Int]("numPlanPIndexes")(0)
+      } yield SearchIndex(
+        name,
+        sourceName,
+        uuid,
+        typ,
+        params,
+        uuid,
+        sourceParams,
+        sourceType,
+        planParams,
+        numPlanPIndexes
+      )
+
+    def apply(a: SearchIndex): Json = {
+      val obj = io.circe.JsonObject(
+        "name"       -> a.name,
+        "sourceName" -> a.sourceName,
+        "type"       -> a.typ.getOrElse(DefaultType),
+        "sourceType" -> a.sourceType.getOrElse(DefaultSouceType)
+      )
+      a.uuid.foreach(obj.add("uuid", _))
+      Json.fromJsonObject(obj)
+    }
+  }
+//  implicit val rw: CouchbasePickler.ReadWriter[SearchIndex] = CouchbasePickler.macroRW
 }
