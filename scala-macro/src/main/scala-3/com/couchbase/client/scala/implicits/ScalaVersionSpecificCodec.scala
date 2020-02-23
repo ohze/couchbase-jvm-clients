@@ -11,11 +11,11 @@ private[scala] trait ScalaVersionSpecificCodec {
   /** Creates a `Codec` for the given type `T`, which is both a `JsonDeserializer[T]` and `JsonSerializer[T]`.  This is everything
     * required to send a case class directly to the Scala SDK, and retrieve results as it.
     */
-  def codec[T: circe.Codec]: Codec[T] = new CirceBasedCodec[T]
+  def codec[T: circe.Decoder : circe.Encoder]: Codec[T] = new CirceBasedCodec[T]
 }
 
 /** Codec based on jsoniter-scala's JsonValueCodec */
-private[scala] class CirceBasedCodec[T: circe.Codec] extends Codec[T] {
+private[scala] class CirceBasedCodec[T: circe.Decoder : circe.Encoder] extends Codec[T] {
   override def serialize(input: T): Try[Array[Byte]] = Try {
     Printer.noSpaces.printToByteBuffer(input.asJson).array()
   }
