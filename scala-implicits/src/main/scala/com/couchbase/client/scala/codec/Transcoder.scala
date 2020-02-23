@@ -26,13 +26,27 @@ sealed trait Transcoder
 trait TranscoderWithoutSerializer extends Transcoder {
   def encode[T](value: T): Try[EncodedValue]
 
-  def decode[T](value: Array[Byte], flags: Int)(implicit tag: WeakTypeTag[T]): Try[T]
+  def decode[T](value: Array[Byte], flags: Int): Try[T]
+
+  def decodeToByteArray(value: Array[Byte], flags: Int): Try[Array[Byte]]
+
+  def decodeToString(value: Array[Byte], flags: Int): Try[String]
 }
 
 trait TranscoderWithSerializer extends Transcoder {
   def encode[A](value: A, serializer: JsonSerializer[A]): Try[EncodedValue]
 
-  def decode[A](value: Array[Byte], flags: Int, serializer: JsonDeserializer[A])(
-      implicit tag: WeakTypeTag[A]
-  ): Try[A]
+  def decode[A](value: Array[Byte], flags: Int, serializer: JsonDeserializer[A]): Try[A]
+
+  def decodeToByteArray(
+      value: Array[Byte],
+      flags: Int,
+      deserializer: JsonDeserializer[Array[Byte]]
+  ): Try[Array[Byte]]
+
+  def decodeToString(
+      value: Array[Byte],
+      flags: Int,
+      deserializer: JsonDeserializer[String]
+  ): Try[String]
 }

@@ -19,9 +19,6 @@ package com.couchbase.client.scala.manager.user
 import java.time.Instant
 
 import com.couchbase.client.core.annotation.Stability.Volatile
-import com.couchbase.client.core.deps.com.fasterxml.jackson.annotation.JsonProperty
-import com.couchbase.client.scala.util.CouchbasePickler
-import upickle.default.{macroRW, ReadWriter => RW}
 
 /** Models a Couchbase user.
   *
@@ -103,5 +100,38 @@ case class UserAndMetadata(
 }
 
 object UserAndMetadata {
-  implicit val rw: CouchbasePickler.ReadWriter[UserAndMetadata] = CouchbasePickler.macroRW
+  import io.circe._
+
+  implicit val rw: Codec[UserAndMetadata] = {
+    val d: Decoder[UserAndMetadata] = Decoder.forProduct7(
+      "domain",
+      "id",
+      "name",
+      "roles",
+      "password_change_date",
+      "groups",
+      "external_groups"
+    )(UserAndMetadata.apply)
+    val e: Encoder[UserAndMetadata] = Encoder.forProduct7(
+      "domain",
+      "id",
+      "name",
+      "roles",
+      "password_change_date",
+      "groups",
+      "external_groups"
+    )(
+      x =>
+        (
+          x.domain,
+          x.username,
+          x.displayName,
+          x._effectiveRoles,
+          x._passwordChanged,
+          x.groups,
+          x.externalGroups
+        )
+    )
+    Codec.from(d, e)
+  }
 }

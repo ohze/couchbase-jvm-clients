@@ -41,6 +41,17 @@ trait JsonDeserializer[T] {
 /** Contains all built-in JsonDeserializer, which allow a variety of types to be converted from what is stored on Couchbase Server.
   */
 object JsonDeserializer {
+//  import com.github.plokhotnyuk.jsoniter_scala.core.JsonValueCodec
+//  import com.github.plokhotnyuk.jsoniter_scala.core.{readFromArray => jsoniterReadFromArray}
+//  /** Provide a JsonDeserializer[T] if there is an implicit JsonValueCodec[T] in scope.
+//    *
+//    * @note SCBC-158: The underlying JsonValueCodec should be make with
+//    * {{{ CodecMakerConfig.withSetMaxInsertNumber(100000).withMapMaxInsertNumber(100000) }}}
+//    * The default number of items allowed in Sets and Maps is a conservative 1,024.
+//    * Adjusting this to an arbitrary 100k.
+//    * @see [[com.couchbase.client.scala.implicits.CodecImplicits.makeCodec]] */
+//  implicit def jsoniterDecode[T](implicit underlying: JsonValueCodec[T]): JsonDeserializer[T] =
+//    input => Try(jsoniterReadFromArray(input)(underlying))
 
   /** `JsonDeserializer` for `Array[Byte]`.
     *
@@ -183,10 +194,11 @@ object JsonDeserializer {
     * Json4s is an optional dependency.
     */
   implicit object Json4sConvert extends JsonDeserializer[org.json4s.JsonAST.JValue] {
-    import org.json4s.JValue, org.json4s.native.JsonMethods
+    import org.json4s.{JValue, StringInput}, org.json4s.native.JsonMethods
 
-    override def deserialize(bytes: Array[Byte]): Try[JValue] = {
-      tryDecode(JsonMethods.parse(new String(bytes, StandardCharsets.UTF_8)))
+    override def deserialize(bytes: Array[Byte]): Try[JValue] = tryDecode {
+      val input = StringInput(new String(bytes, StandardCharsets.UTF_8))
+      JsonMethods.parse(input)
     }
   }
 
@@ -210,10 +222,10 @@ object JsonDeserializer {
     * Circe is an optional dependency.
     */
   implicit object CirceConvert extends JsonDeserializer[io.circe.Json] {
+    import io.circe.Json
+
     override def deserialize(bytes: Array[Byte]): Try[Json] = {
-      val str = new String(bytes, StandardCharsets.UTF_8)
-      val out = io.circe.parser.decode[io.circe.Json](str)
-      out match {
+      io.circe.jawn.parseByteArray(bytes) match {
         case Right(result) => Success(result)
         case Left(err)     => Failure(new DecodingFailureException(err))
       }

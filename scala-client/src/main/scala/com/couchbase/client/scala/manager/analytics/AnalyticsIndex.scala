@@ -22,7 +22,7 @@ case class AnalyticsIndex(
     datasetName: String,
     dataverseName: String,
     isPrimary: Boolean
-)
+) derives io.circe.Codec.AsObject
 
 object AnalyticsIndex {
   implicit val codec: Codec[AnalyticsIndex] = Codec.codec[AnalyticsIndex]

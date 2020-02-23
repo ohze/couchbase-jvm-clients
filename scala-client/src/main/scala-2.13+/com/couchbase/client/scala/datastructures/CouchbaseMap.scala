@@ -23,18 +23,18 @@ import com.couchbase.client.scala.json.JsonObjectSafe
 import com.couchbase.client.scala.kv._
 
 import scala.collection.mutable
+import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 import scala.util.{Failure, Success, Try}
 
 /** Presents a Scala Map interface on top of a mutable persistent data structure, in the form of a document stored
   * on the cluster.
   */
-class CouchbaseMap[T](
+class CouchbaseMap[T: JsonDeserializer: JsonSerializer: ClassTag](
     id: String,
     collection: Collection,
     options: Option[CouchbaseCollectionOptions] = None
-)(implicit decode: JsonDeserializer[T], encode: JsonSerializer[T], tag: WeakTypeTag[T])
-    extends mutable.AbstractMap[String, T] {
+) extends mutable.AbstractMap[String, T] {
 
   private val Values = "values."
 

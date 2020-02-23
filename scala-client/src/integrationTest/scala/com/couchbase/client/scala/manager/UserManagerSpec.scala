@@ -2,7 +2,7 @@ package com.couchbase.client.scala.manager
 
 import com.couchbase.client.core.error.{CouchbaseException, UserNotFoundException}
 import com.couchbase.client.scala.manager.user._
-import com.couchbase.client.scala.util.CouchbasePickler._
+//import com.couchbase.client.scala.util.CouchbasePickler._
 import com.couchbase.client.scala.util.ScalaIntegrationTest
 import com.couchbase.client.scala.{Cluster, Collection}
 import com.couchbase.client.test._
@@ -109,6 +109,7 @@ class UserManagerSpec extends ScalaIntegrationTest {
     assertUserAbsent(Username)
   }
 
+  /*
   @Test
   def parseUserAndMetadataUpickle(): Unit = {
     val raw =
@@ -164,6 +165,7 @@ class UserManagerSpec extends ScalaIntegrationTest {
     val role = read[RoleAndOrigins](raw)
     assert(role.role.name == "admin")
   }
+   */
 
   @Test
   def availableRoles(): Unit = {

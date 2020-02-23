@@ -18,10 +18,10 @@ package com.couchbase.client.scala.kv
 
 import com.couchbase.client.scala.codec._
 import com.couchbase.client.scala.json.JsonObject
-import scala.reflect.runtime.universe._
 
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
+import scala.quoted.{given _, _}
 
 /** The result of a `get` operation, e.g. the contents of a document.
   *
@@ -40,13 +40,12 @@ import scala.util.{Failure, Success, Try}
 case class GetResult(
     id: String,
     // It's Right only in the case where projections were requested
-    private val _content: Either[Array[Byte], JsonObject],
+    private[scala] val _content: Either[Array[Byte], JsonObject],
     private[scala] val flags: Int,
     cas: Long,
     expiry: Option[Duration],
     transcoder: Transcoder
 ) {
-
   /** Return the content, converted into the application's preferred representation.
     *
     * <b>Projections</b>: if the advanced feature projections has been used (e.g. if a `project` array was provided
@@ -56,31 +55,67 @@ case class GetResult(
     *
     * @tparam T $SupportedTypes
     */
-  def contentAs[T](
-      implicit deserializer: JsonDeserializer[T],
-      tt: WeakTypeTag[T]
-  ): Try[T] = {
-    _content match {
+  inline def contentAs[T] = ${GetResult.contentAsImpl[T]('this)}
+}
+
+object GetResult {
+  def contentAsImpl[T : Type](r: Expr[GetResult])(using qctx: QuoteContext): Expr[Try[T]] = {
+    import qctx.tasty.{Type => _, Try => _, given _, _}
+    import scala.quoted.matching.summonExpr
+    import scala.quoted.autolift.{given _}
+    import scala.language.implicitConversions
+
+    val deserializer = summonExpr[JsonDeserializer[T]] match {
+      case Some(x) => x
+      case None =>
+        qctx.throwError("no implicit argument of type " + typeOf[JsonDeserializer[T]].show +
+          " was found for an implicit parameter of method GetResult.contentAs")
+    }
+    val tt = summon[Type[T]].unseal.tpe
+    val isByteArray = typeOf[Array[Byte]] <:< tt
+    val isString = typeOf[String] <:< tt
+    val isJsonObject = typeOf[JsonObject] <:< tt
+
+    '{$r._content match {
       case Left(bytes) =>
         // Regular case
-        transcoder match {
-          case t: TranscoderWithSerializer    => t.decode(bytes, flags, deserializer)
-          case t: TranscoderWithoutSerializer => t.decode(bytes, flags)
-        }
+        $r.transcoder match
+          case t: TranscoderWithSerializer =>
+            if $isByteArray
+              t.decodeToByteArray(
+                bytes,
+                $r.flags,
+                $deserializer.asInstanceOf[JsonDeserializer[Array[Byte]]]
+              ).asInstanceOf[Try[T]]
+            else if $isString
+              t.decodeToString(
+                bytes,
+                $r.flags,
+                $deserializer.asInstanceOf[JsonDeserializer[String]]
+              ).asInstanceOf[Try[T]]
+            else
+              t.decode(bytes, $r.flags, $deserializer)
+
+          case t: TranscoderWithoutSerializer =>
+            if $isByteArray
+              t.decodeToByteArray(bytes, $r.flags).asInstanceOf[Try[T]]
+            else if $isString
+              t.decodeToString(bytes, $r.flags).asInstanceOf[Try[T]]
+            else
+              t.decode(bytes, $r.flags)
 
       case Right(obj) =>
         // Projection
         // Check if JsonObject is sub-type of T, which mean T is JsonObject | AnyRef | Any
-        if (weakTypeOf[JsonObject] <:< tt.tpe) {
+        if $isJsonObject
           Success(obj.asInstanceOf[T])
-        } else {
+        else
           Failure(
             new IllegalArgumentException(
               "Projection results can currently only be returned with " +
                 "contentAs[JsonObject]"
             )
           )
-        }
-    }
+    }}
   }
 }

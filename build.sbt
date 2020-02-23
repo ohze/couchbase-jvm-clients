@@ -5,17 +5,21 @@ import sbtassembly.shadeplugin.ShadePlugin.autoImport.shadeKeys.artifactIdSuffix
 import sbtassembly.shadeplugin.ShadePluginUtils._
 
 // TODO remove this (only to speedup publishLocal)
-lazy val disableDocSettings = Seq(
-  Compile / doc / sources := Nil,
-  Compile / packageDoc / publishArtifact := false
+inThisBuild(
+  Seq(
+    Compile / doc / sources := Nil,
+    Compile / packageDoc / publishArtifact := false,
+    offline := true
+  )
 )
+ThisBuild / trackInternalDependencies := TrackLevel.TrackIfMissing
 
 lazy val checkstyleSettings = Seq(
   checkstyleSeverityLevel := Some(CheckstyleSeverityLevel.Error),
   checkstyleConfigLocation := (ThisBuild / baseDirectory).value / "config" / "checkstyle" / "checkstyle-basic.xml",
   checkstyleHeaderFile := (ThisBuild / baseDirectory).value / "config" / "checkstyle" / "checkstyle-header.txt"
 )
-lazy val commonSettings = disableDocSettings ++ checkstyleSettings ++ Seq(
+lazy val commonSettings = checkstyleSettings ++ Seq(
   organization := "com.couchbase.client",
   javacOptions ++= Seq("-encoding", "UTF-8"),
   Compile / compile / javacOptions ++= (javaVersion match {
@@ -42,6 +46,7 @@ lazy val javaModuleSettings = commonSettings ++ Seq(
 )
 
 lazy val scalaModuleSettings = commonSettings ++ Seq(
+  logLevel := Level.Error, // TODO remove this
   version := "1.1.0-SNAPSHOT",
   scalaVersion := V.scala,
   crossScalaVersions := V.crossScala,
@@ -227,11 +232,23 @@ lazy val `scala-implicits` = project
   )
   .dependsOn(`core-io`, `test-utils` % Test)
 
+val dottySourceDirSetting = unmanagedSourceDirectories in Compile += {
+  val sourceDir = (Compile / sourceDirectory).value
+  if (isDotty.value) sourceDir / "scala-3"
+  else sourceDir / "scala-2"
+}
+
 lazy val `scala-macro` = project
   .disablePlugins(AssemblyPlugin, CheckstylePlugin)
   .settings(scalaModuleSettings: _*)
   .settings(
-    libraryDependencies += jsoniterScala("macros")
+    exportJars := true,
+    libraryDependencies += {
+      // use circe because jsoniter-scala is not dotty ready yet
+      if (isDotty.value) circe("jawn")
+      else jsoniterScala("macros")
+    },
+    dottySourceDirSetting
   )
   .dependsOn(`scala-implicits`)
 
@@ -268,14 +285,21 @@ lazy val `scala-client` = project
     // https://docs.scala-lang.org/overviews/core/collections-migration-213.html#how-do-i-cross-build-my-project-against-scala-212-and-scala-213
     unmanagedSourceDirectories in Compile += {
       val sourceDir = (Compile / sourceDirectory).value
-      CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, n)) if n >= 13 => sourceDir / "scala-2.13+"
-        case _                       => sourceDir / "scala-2.13-"
-      }
-    }
+      val is13Plus = isDotty.value || (CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, n)) => n >= 13
+        case _            => sys.error("Invalid scalaVersion")
+      })
+      if (is13Plus) sourceDir / "scala-2.13+"
+      else sourceDir / "scala-2.13-"
+    },
+    dottySourceDirSetting
   )
   .itConfig()
-  .dependsOn(`core-io`, `scala-implicits`, `scala-macro` % "provided;test", `test-utils` % Test)
+  .dependsOn(`core-io`, `scala-implicits`, `test-utils` % Test)
+  // TODO scala-client on scala 2.x do NOT depends on scala-compiler but with this setting `.dependsOn(`scala-macro`)`
+  // , we make scala-client <- jsoniter-scala-macros <- scala-compiler
+  // Note: scala-client IS depended on scala-reflect but this is not declared in the official pom.xml (bug)
+  .dependsOn(`scala-macro`)
   .removePomDependsOn(scalaJava8Compat)
 
 lazy val `scala-examples` = project
