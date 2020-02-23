@@ -4,6 +4,8 @@ import sbtassembly.shadeplugin.ResourceTransformer.{Discard, Rename}
 import sbtassembly.shadeplugin.ShadePlugin.autoImport.shadeKeys.artifactIdSuffix
 import sbtassembly.shadeplugin.ShadePluginUtils._
 
+Global / bloopExportJarClassifiers := Some(Set("sources"))
+
 // TODO remove this (only to speedup publishLocal)
 inThisBuild(
   Seq(
