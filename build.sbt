@@ -107,6 +107,7 @@ lazy val `core-io-deps` = project
     version := "1.1.0-SNAPSHOT",
     libraryDependencies := coreIoShadedDeps,
     publish / skip := true,
+    exportToInternal := TrackLevel.TrackIfMissing,
     // https://www.scala-sbt.org/1.x/docs/Howto-Classpaths.html#Use+packaged+jars+on+classpaths+instead+of+class+directories
     // exportJars so in dependent projects, we can compute assemblyExcludedJars based on this Project / artifactPath
     exportJars := true
@@ -140,10 +141,10 @@ lazy val `core-io` = project
     version := "2.1.0-SNAPSHOT",
     libraryDependencies ++= coreIoDeps,
     exportJars := true,
-    Compile / unmanagedJars += {
-      (`core-io-deps` / assembly).value
-      (`core-io-deps` / assembly / assemblyOutputPath).value
-    }
+    Compile / unmanagedJars += Def.taskDyn {
+      val jar = (`core-io-deps` / assembly / assemblyOutputPath).value
+      if (jar.exists()) Def.task { jar } else `core-io-deps` / assembly
+    }.value
   )
   .itConfig()
   .dependsOn(`test-utils` % Test)
