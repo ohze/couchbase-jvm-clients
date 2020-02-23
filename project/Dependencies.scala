@@ -16,7 +16,7 @@ object Dependencies {
     val log4jSlf4j     = "2.13.0"
     // jupiter-interface's version should be same as sbt-jupiter-interface's version in project/plugins.sbt
     val jupiterInterface = "0.8.3"
-    val junit            = "5.5.2"
+    val junit            = "5.6.0"
     val mockito          = "3.2.4"
     val assertj          = "3.14.0"
     val testcontainers   = "1.12.4"
@@ -24,13 +24,13 @@ object Dependencies {
     val awaitility       = "4.0.1"
     val opentracing      = "0.33.0"
     val opentelemetry    = "0.2.0"
-    val scalaCollCompat  = "2.1.3"
+    val scalaCollCompat  = "2.1.4"
     // val jsoniter         = "0.9.23"
     val jsoniterScala    = "2.1.6"
     val json4s           = "3.6.7"
-    val jawnAst          = "0.14.3"
-    val upickle          = "0.9.8"
-    val circe            = "0.12.3"
+    val jawn             = "1.0.0"
+    val upickle          = "0.9.9"
+    val circe            = "0.13.0"
     val playJson         = "2.8.1"
     val reactorScala     = "0.5.0"
     val scalaJava8Compat = "0.9.0"
@@ -72,7 +72,7 @@ object Dependencies {
   val scalaCollCompat = "org.scala-lang.modules" %% "scala-collection-compat" % V.scalaCollCompat
   // don't need this. jsoniter-scala is not depended on jsoniter
   // val jsoniter = "com.jsoniter"  % "jsoniter"  % V.jsoniter
-  val jawnAst = "org.typelevel" %% "jawn-ast" % V.jawnAst
+  val jawnAst = "org.typelevel" %% "jawn-ast" % V.jawn
   def jsoniterScala(name: String): ModuleID =
     "com.github.plokhotnyuk.jsoniter-scala" %% s"jsoniter-scala-$name" % V.jsoniterScala
   def json4s(name: String): ModuleID = "org.json4s"             %% s"json4s-$name"            % V.json4s
