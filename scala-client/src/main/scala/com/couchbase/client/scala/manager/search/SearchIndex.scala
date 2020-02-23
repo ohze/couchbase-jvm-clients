@@ -17,9 +17,11 @@ package com.couchbase.client.scala.manager.search
 
 import com.couchbase.client.core.error.CouchbaseException
 import com.couchbase.client.scala.codec.JsonDeserializer
-import com.couchbase.client.scala.util.CouchbasePickler
+import io.circe
 import io.circe.Decoder.Result
 import io.circe.Json
+import io.circe.generic.semiauto
+
 import scala.util.{Failure, Try}
 
 private[scala] case class SearchIndexWrapper(
@@ -33,13 +35,13 @@ private[scala] case class SearchIndexWrapper(
 }
 
 private[scala] object SearchIndexWrapper {
-  implicit val rw: CouchbasePickler.ReadWriter[SearchIndexWrapper] = CouchbasePickler.macroRW
+  implicit val rw: circe.Codec[SearchIndexWrapper] = semiauto.deriveCodec
 }
 
 private[scala] case class SearchIndexesWrapper(indexDefs: Map[String, SearchIndex])
 
 private[scala] object SearchIndexesWrapper {
-  implicit val rw: CouchbasePickler.ReadWriter[SearchIndexesWrapper] = CouchbasePickler.macroRW
+  implicit val rw: circe.Codec[SearchIndexesWrapper] = semiauto.deriveCodec
 }
 
 case class SearchIndex(
@@ -120,8 +122,8 @@ object SearchIndex {
       val obj = io.circe.JsonObject(
         "name"       -> a.name,
         "sourceName" -> a.sourceName,
-        "type"       -> a.typ.getOrElse(DefaultType),
-        "sourceType" -> a.sourceType.getOrElse(DefaultSouceType)
+        "type"       -> a.typ.getOrElse[String](DefaultType),
+        "sourceType" -> a.sourceType.getOrElse[String](DefaultSouceType)
       )
       a.uuid.foreach(obj.add("uuid", _))
       Json.fromJsonObject(obj)
