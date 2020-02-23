@@ -8,7 +8,7 @@ object Dependencies {
     val scala213       = "2.13.1"
     val scala: String  = scala3 // default for scalaVersion SettingKey
     val crossScala     = Seq(scala3, scala213, "2.12.10")
-    val reactor        = "3.3.1.RELEASE"
+    val reactor        = "3.3.2.RELEASE"
     val slf4j          = "1.7.30"
     val netty          = "4.1.45.Final"
     val nettyBoringssl = "2.0.28.Final"
@@ -29,13 +29,13 @@ object Dependencies {
     val opentelemetry    = "0.2.0"
     val scalaCollCompat  = "2.1.4"
     // val jsoniter         = "0.9.23"
-    val jsoniterScala    = "2.1.6"
+    val jsoniterScala    = "2.1.7"
     val json4s           = "3.6.7"
     val jawn             = "1.0.0"
     val upickle          = "0.9.9"
     val circe            = "0.13.0"
     val playJson         = "2.8.1"
-    val reactorScala     = "0.5.0"
+    val reactorScala     = "0.5.1"
     val scalaJava8Compat = "0.9.0"
     val scalacheck       = "1.14.0"
   }
