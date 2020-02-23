@@ -10,3 +10,11 @@ dependency-reduced-pom.xml
 *.local.properties
 node_modules
 package-lock.json
+/.bloop
+.classpath
+.project
+/.metals
+.settings
+.dotty-ide-artifact
+.dotty-ide.json
+.factorypath
