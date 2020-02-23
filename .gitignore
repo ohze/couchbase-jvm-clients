@@ -11,3 +11,11 @@ dependency-reduced-pom.xml
 node_modules
 package-lock.json
 .DS_Store
+/.bloop
+.classpath
+.project
+/.metals
+.settings
+.dotty-ide-artifact
+.dotty-ide.json
+.factorypath
