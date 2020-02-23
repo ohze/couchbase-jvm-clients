@@ -17,7 +17,7 @@ package com.couchbase.client.scala.manager.search
 
 import com.couchbase.client.core.error.CouchbaseException
 import com.couchbase.client.scala.codec.JsonDeserializer
-import com.couchbase.client.scala.util.{CouchbasePickler, given _}
+import com.couchbase.client.scala.util.CouchbasePickler
 import io.circe.Decoder.Result
 import io.circe.Json
 import scala.util.{Failure, Try}
@@ -69,7 +69,7 @@ case class SearchIndex(
   def sourceParamsAs[T](implicit deserializer: JsonDeserializer[T]): Try[T] =
     convert(sourceParams, deserializer)
 
-  private def convert[T](value: Option[io.circe.Json], deserializer: JsonDeserializer[T]) = {
+  private def convert[T](value: Option[Json], deserializer: JsonDeserializer[T]) = {
     value match {
       case Some(pp) =>
         val bytes = io.circe.Printer.noSpaces.printToByteBuffer(pp).array()
@@ -115,6 +115,8 @@ object SearchIndex {
       )
 
     def apply(a: SearchIndex): Json = {
+      import com.couchbase.client.scala.util.CirceConversions._
+
       val obj = io.circe.JsonObject(
         "name"       -> a.name,
         "sourceName" -> a.sourceName,
@@ -125,5 +127,4 @@ object SearchIndex {
       Json.fromJsonObject(obj)
     }
   }
-//  implicit val rw: CouchbasePickler.ReadWriter[SearchIndex] = CouchbasePickler.macroRW
 }

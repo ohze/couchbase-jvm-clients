@@ -16,7 +16,6 @@
 package com.couchbase.client.scala.codec
 
 import scala.language.experimental.macros
-import scala.reflect.runtime.universe._
 import scala.util.Try
 
 case class EncodedValue(encoded: Array[Byte], flags: Int)

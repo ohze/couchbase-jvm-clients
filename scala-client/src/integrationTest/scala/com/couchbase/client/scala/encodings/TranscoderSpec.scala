@@ -24,7 +24,6 @@ import org.junit.jupiter.api.TestInstance.Lifecycle
 import org.junit.jupiter.api.{AfterAll, BeforeAll, Test, TestInstance}
 
 import scala.concurrent.duration._
-import scala.reflect.runtime.universe._
 import scala.util.{Failure, Success, Try}
 
 object TranscoderSpec {

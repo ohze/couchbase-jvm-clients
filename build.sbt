@@ -47,7 +47,23 @@ lazy val javaModuleSettings = commonSettings ++ Seq(
   crossPaths := false        // drop off Scala suffix from artifact names and publish path
 )
 
-lazy val scalaModuleSettings = commonSettings ++ Seq(
+val scalaSourceDirsSetting = unmanagedSourceDirectories in Compile ++= {
+  val sourceDir             = (Compile / sourceDirectory).value
+  val Some((_major, minor)) = CrossVersion.partialVersion(scalaVersion.value)
+  val major                 = if (_major == 0) 3 else _major
+
+  // https://docs.scala-lang.org/overviews/core/collections-migration-213.html#how-do-i-cross-build-my-project-against-scala-212-and-scala-213
+  val coll213 = (major, minor) match {
+    case (2, n) if n >= 13 => Seq("2.13+")
+    case (2, _)            => Seq("2.13-")
+    case _                 => Nil
+  }
+
+  val all = Seq(major.toString, s"$major.$minor") ++ coll213
+  all.map(s => sourceDir / s"scala-$s")
+}
+
+lazy val scalaModuleSettings = commonSettings ++ scalaSourceDirsSetting ++ Seq(
   logLevel := Level.Error, // TODO remove this
   version := "1.1.0-SNAPSHOT",
   scalaVersion := V.scala,
@@ -234,12 +250,6 @@ lazy val `scala-implicits` = project
   )
   .dependsOn(`core-io`, `test-utils` % Test)
 
-val dottySourceDirSetting = unmanagedSourceDirectories in Compile += {
-  val sourceDir = (Compile / sourceDirectory).value
-  if (isDotty.value) sourceDir / "scala-3"
-  else sourceDir / "scala-2"
-}
-
 lazy val `scala-macro` = project
   .disablePlugins(AssemblyPlugin, CheckstylePlugin)
   .settings(scalaModuleSettings: _*)
@@ -249,8 +259,7 @@ lazy val `scala-macro` = project
       // use circe because jsoniter-scala is not dotty ready yet
       if (isDotty.value) circe("jawn")
       else jsoniterScala("macros")
-    },
-    dottySourceDirSetting
+    }
   )
   .dependsOn(`scala-implicits`)
 
@@ -283,18 +292,7 @@ lazy val `scala-client` = project
   .enableAssemblyPublish()
   .settings(
     description := "The official Couchbase Scala SDK",
-    libraryDependencies ++= scalaClientDeps.value,
-    // https://docs.scala-lang.org/overviews/core/collections-migration-213.html#how-do-i-cross-build-my-project-against-scala-212-and-scala-213
-    unmanagedSourceDirectories in Compile += {
-      val sourceDir = (Compile / sourceDirectory).value
-      val is13Plus = isDotty.value || (CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, n)) => n >= 13
-        case _            => sys.error("Invalid scalaVersion")
-      })
-      if (is13Plus) sourceDir / "scala-2.13+"
-      else sourceDir / "scala-2.13-"
-    },
-    dottySourceDirSetting
+    libraryDependencies ++= scalaClientDeps.value
   )
   .itConfig()
   .dependsOn(`core-io`, `scala-implicits`, `test-utils` % Test)

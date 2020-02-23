@@ -7,6 +7,8 @@ import com.couchbase.client.scala.json.JsonObjectSafe
 import com.couchbase.client.scala.kv.{GetOptions, InsertOptions}
 import com.couchbase.client.scala.util.{ScalaIntegrationTest, Validate}
 import com.couchbase.client.test.{ClusterType, IgnoreWhen}
+import io.circe
+import io.circe.generic.semiauto
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import org.junit.jupiter.api.{AfterAll, BeforeAll, Test, TestInstance}
 
@@ -348,12 +350,17 @@ class KeyValueSpec extends ScalaIntegrationTest {
     assert(validations.isFailure)
   }
 
-  case class Address(line1: String) derives io.circe.Codec.AsObject
+  case class Address(line1: String) // derives AsObject
+  object Address {
+    implicit val rw: circe.Codec[Address] = semiauto.deriveCodec
+  }
   // Need define case class & object here - not in `all` method
   // or else, scala 2.11 will not compile, with error:
   // User is already defined as (compiler-generated) case class companion object User
-  case class User(name: String, age: Int, addresses: Seq[Address]) derives io.circe.Codec.AsObject
+  case class User(name: String, age: Int, addresses: Seq[Address])
   object User {
+    implicit val rw: circe.Codec[User] = semiauto.deriveCodec
+
     implicit val codec: Codec[User] = Codec.codec[User]
   }
 
@@ -386,9 +393,11 @@ class KeyValueSpec extends ScalaIntegrationTest {
 
   }
 
-  case class LargeDocTest(values: Map[String, String]) derives io.circe.Codec.AsObject
+  case class LargeDocTest(values: Map[String, String])
 
   object LargeDocTest {
+    implicit val rw: circe.Codec[LargeDocTest] = semiauto.deriveCodec
+
     implicit val codec: Codec[LargeDocTest] = Codec.codec[LargeDocTest]
   }
 
@@ -407,9 +416,11 @@ class KeyValueSpec extends ScalaIntegrationTest {
     assert(as.values.size == count)
   }
 
-  case class LargeDocTest2(values: Set[Int]) derives io.circe.Codec.AsObject
+  case class LargeDocTest2(values: Set[Int])
 
   object LargeDocTest2 {
+    implicit val rw: circe.Codec[LargeDocTest2] = semiauto.deriveCodec
+
     implicit val codec: Codec[LargeDocTest2] = Codec.codec[LargeDocTest2]
   }
 
