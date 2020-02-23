@@ -22,21 +22,21 @@ import com.couchbase.client.core.error.{
   DocumentNotFoundException
 }
 import com.couchbase.client.scala.Collection
-import com.couchbase.client.scala.codec.{Conversions, JsonDeserializer, JsonSerializer}
+import com.couchbase.client.scala.codec.{JsonDeserializer, JsonSerializer}
 import com.couchbase.client.scala.kv._
 
-import scala.reflect.ClassTag
 import scala.util.{Failure, Success}
 import scala.reflect.runtime.universe._
 
 /** Presents a Scala Queue interface on top of a mutable persistent data structure, in the form of a document stored
   * on the cluster.
   */
-class CouchbaseQueue[T: JsonDeserializer: JsonSerializer: ClassTag](
+class CouchbaseQueue[T](
     id: String,
     collection: Collection,
     options: Option[CouchbaseCollectionOptions] = None
-) extends CouchbaseBuffer(id, collection, options) {
+)(implicit decode: JsonDeserializer[T], encode: JsonSerializer[T], tag: WeakTypeTag[T])
+    extends CouchbaseBuffer(id, collection, options) {
 
   private val lookupInOptions = LookupInOptions()
     .timeout(opts.timeout)

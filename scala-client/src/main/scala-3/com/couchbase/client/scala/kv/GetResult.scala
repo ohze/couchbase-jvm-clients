@@ -46,6 +46,7 @@ case class GetResult(
     expiry: Option[Duration],
     transcoder: Transcoder
 ) {
+
   /** Return the content, converted into the application's preferred representation.
     *
     * <b>Projections</b>: if the advanced feature projections has been used (e.g. if a `project` array was provided

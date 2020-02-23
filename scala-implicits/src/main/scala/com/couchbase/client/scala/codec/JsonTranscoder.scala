@@ -17,7 +17,6 @@ package com.couchbase.client.scala.codec
 
 import com.couchbase.client.core.msg.kv.CodecFlags
 
-import scala.reflect.runtime.universe._
 import scala.util.{Failure, Try}
 
 class JsonTranscoder extends TranscoderWithSerializer {

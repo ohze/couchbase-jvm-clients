@@ -16,14 +16,17 @@
 
 package com.couchbase.client.scala.manager.analytics
 import com.couchbase.client.scala.implicits.Codec
+import io.circe, io.circe.generic.semiauto
 
 case class AnalyticsIndex(
     name: String,
     datasetName: String,
     dataverseName: String,
     isPrimary: Boolean
-) derives io.circe.Codec.AsObject
+)
 
 object AnalyticsIndex {
+  implicit val circeCodec: circe.Codec[AnalyticsIndex] = semiauto.deriveCodec
+
   implicit val codec: Codec[AnalyticsIndex] = Codec.codec[AnalyticsIndex]
 }

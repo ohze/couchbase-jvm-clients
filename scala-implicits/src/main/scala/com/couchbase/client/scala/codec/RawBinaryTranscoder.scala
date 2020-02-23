@@ -18,7 +18,6 @@ package com.couchbase.client.scala.codec
 import com.couchbase.client.core.error.DecodingFailureException
 import com.couchbase.client.core.msg.kv.CodecFlags
 
-import scala.reflect.runtime.universe
 import scala.util.{Failure, Success, Try}
 
 class RawBinaryTranscoder extends TranscoderWithoutSerializer {

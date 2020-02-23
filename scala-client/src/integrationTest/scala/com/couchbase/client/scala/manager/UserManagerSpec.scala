@@ -2,7 +2,7 @@ package com.couchbase.client.scala.manager
 
 import com.couchbase.client.core.error.{CouchbaseException, UserNotFoundException}
 import com.couchbase.client.scala.manager.user._
-//import com.couchbase.client.scala.util.CouchbasePickler._
+import com.couchbase.client.scala.util.CouchbasePickler._
 import com.couchbase.client.scala.util.ScalaIntegrationTest
 import com.couchbase.client.scala.{Cluster, Collection}
 import com.couchbase.client.test._
@@ -18,7 +18,6 @@ import com.couchbase.mock.deps.org.apache.http.util.EntityUtils
 import org.junit.jupiter.api.Assertions.{assertEquals, assertThrows}
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import org.junit.jupiter.api._
-import reactor.core.scala.publisher.SMono
 
 import scala.util.{Failure, Success}
 
@@ -109,7 +108,6 @@ class UserManagerSpec extends ScalaIntegrationTest {
     assertUserAbsent(Username)
   }
 
-  /*
   @Test
   def parseUserAndMetadataUpickle(): Unit = {
     val raw =
@@ -165,7 +163,6 @@ class UserManagerSpec extends ScalaIntegrationTest {
     val role = read[RoleAndOrigins](raw)
     assert(role.role.name == "admin")
   }
-   */
 
   @Test
   def availableRoles(): Unit = {

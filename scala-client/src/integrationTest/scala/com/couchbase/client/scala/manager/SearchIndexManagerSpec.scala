@@ -21,7 +21,7 @@ import java.util.UUID
 import com.couchbase.client.core.error.IndexNotFoundException
 import com.couchbase.client.scala.json.JsonObject
 import com.couchbase.client.scala.manager.search._
-import com.couchbase.client.scala.util.ScalaIntegrationTest
+import com.couchbase.client.scala.util.{CouchbasePickler, ScalaIntegrationTest}
 import com.couchbase.client.scala.Cluster
 import com.couchbase.client.test._
 import org.junit.jupiter.api.TestInstance.Lifecycle
@@ -114,7 +114,6 @@ class SearchIndexManagerSpec extends ScalaIntegrationTest {
     assert(fixIndex == foundIndexAgain)
   }
 
-  /*
   @Test
   def parseIndex(): Unit = {
     val raw =
@@ -135,7 +134,6 @@ class SearchIndexManagerSpec extends ScalaIntegrationTest {
     val p = index.paramsAs[JsonObject].get
     assert(p.obj("doc_config").str("docid_regexp") == "")
   }
-   */
 
   @Test
   def getAllIndexes: Unit = {
