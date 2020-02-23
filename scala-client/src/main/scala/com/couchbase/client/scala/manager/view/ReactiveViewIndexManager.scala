@@ -35,18 +35,14 @@ import com.couchbase.client.core.retry.RetryStrategy
 import com.couchbase.client.core.util.UrlQueryStringBuilder.urlEncode
 import com.couchbase.client.scala.manager.ManagerUtil
 import com.couchbase.client.scala.transformers.JacksonTransformers
-import com.couchbase.client.scala.util.CouchbasePickler
 import com.couchbase.client.scala.util.DurationConversions._
 import com.couchbase.client.scala.util.FutureConversions
 import com.couchbase.client.scala.view.DesignDocumentNamespace
 import reactor.core.scala.publisher.{SFlux, SMono}
 
-import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
-import io.circe.{Decoder, DecodingFailure, HCursor, Json, JsonObject, jawn}
-
-import scala.collection.mutable
+import io.circe.{Json, jawn}
 
 class ReactiveViewIndexManager(private[scala] val core: Core, bucket: String) {
   private val DefaultTimeout: Duration =

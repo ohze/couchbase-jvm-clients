@@ -30,6 +30,8 @@ import com.couchbase.client.scala.query.{QueryOptions, QueryResult}
 import com.couchbase.client.scala.transformers.JacksonTransformers
 import com.couchbase.client.scala.util.DurationConversions._
 import com.couchbase.client.scala.util.{FutureConversions, RowTraversalUtil}
+import io.circe
+import io.circe.generic.semiauto
 import reactor.core.scala.publisher.SMono
 
 import scala.concurrent.duration.{Duration, _}
@@ -436,7 +438,7 @@ case class QueryIndex(
     private val keyspace_id: String,
     private val index_key: Seq[String],
     condition: Option[String]
-) derives io.circe.Codec.AsObject {
+) {
   def keyspaceId: String = keyspace_id
 
   def isPrimary: Boolean = is_primary.getOrElse(false)
@@ -450,6 +452,8 @@ case class QueryIndex(
 }
 
 object QueryIndex {
+  implicit val circeCodec: circe.Codec[QueryIndex] = semiauto.deriveCodec
+
   implicit val codec: Codec[QueryIndex] = Codec.codec[QueryIndex]
 }
 
