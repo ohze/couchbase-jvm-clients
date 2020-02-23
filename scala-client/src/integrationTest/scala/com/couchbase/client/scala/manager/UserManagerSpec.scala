@@ -18,6 +18,7 @@ import com.couchbase.mock.deps.org.apache.http.util.EntityUtils
 import org.junit.jupiter.api.Assertions.{assertEquals, assertThrows}
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import org.junit.jupiter.api._
+import reactor.core.scala.publisher.SMono
 
 import scala.util.{Failure, Success}
 
