@@ -8,6 +8,8 @@ import com.couchbase.client.scala.kv.{GetOptions, InsertOptions}
 import com.couchbase.client.scala.util.ScalaIntegrationTest
 import io.circe.Decoder
 import com.github.plokhotnyuk.jsoniter_scala.macros.named
+import io.circe
+import io.circe.generic.semiauto
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import org.junit.jupiter.api.{AfterAll, BeforeAll, Test, TestInstance}
 
@@ -42,24 +44,20 @@ class JsonInteropSpec extends ScalaIntegrationTest {
 
   object Address {
 //    implicit val rw: upickle.default.ReadWriter[Address] = upickle.default.macroRW
-    implicit val decoder: io.circe.Decoder[Address] =
-      io.circe.generic.semiauto.deriveDecoder[Address]
-    implicit val encoder: io.circe.Encoder[Address] =
-      io.circe.generic.semiauto.deriveEncoder[Address]
+    implicit val circeCodec: circe.Codec[Address] = semiauto.deriveCodec
   }
 
-  case class User(name: String, age: Int, addresses: Seq[Address]) derives io.circe.Codec.AsObject
+  case class User(name: String, age: Int, addresses: Seq[Address])
 
   object User {
+    implicit val circeCodec: circe.Codec[User] = semiauto.deriveCodec
+
     implicit val codec: Codec[User] = Codec.codec[User]
 //    implicit val rw: upickle.default.ReadWriter[User] = upickle.default.macroRW
 
     import com.github.plokhotnyuk.jsoniter_scala.core.JsonValueCodec
     import com.github.plokhotnyuk.jsoniter_scala.macros.{CodecMakerConfig, JsonCodecMaker}
 //    implicit val codecJsoniter: JsonValueCodec[User] = JsonCodecMaker.make[User](CodecMakerConfig)
-
-    implicit val decoder: io.circe.Decoder[User] = io.circe.generic.semiauto.deriveDecoder[User]
-    implicit val encoder: io.circe.Encoder[User] = io.circe.generic.semiauto.deriveEncoder[User]
   }
 
   val ReferenceUser = User("John Smith", 29, List(Address("123 Fake Street")))
@@ -68,8 +66,10 @@ class JsonInteropSpec extends ScalaIntegrationTest {
       @named("name") n: String,
       @named("age") a: Int,
       @named("addresses") s: Seq[Address]
-  ) derives io.circe.Codec.AsObject
+  )
   object User2 {
+    implicit val circeCodec: circe.Codec[User2] = semiauto.deriveCodec
+
     implicit val codec: Codec[User2] = Codec.codec
   }
   val ReferenceUser2 = User2("John Smith", 29, List(Address("123 Fake Street")))

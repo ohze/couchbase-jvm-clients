@@ -17,7 +17,6 @@
 package com.couchbase.client.scala
 
 import com.couchbase.client.scala.codec._
-import com.couchbase.client.scala.datastructures._
 import com.couchbase.client.scala.durability.Durability
 import com.couchbase.client.scala.durability.Durability._
 import com.couchbase.client.scala.kv._
@@ -25,8 +24,6 @@ import com.couchbase.client.scala.util.TimeoutUtil
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.reflect.ClassTag
-import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
 import scala.util.{Failure, Try}
 
@@ -93,7 +90,7 @@ class Collection(
     /** Provides access to an async version of this API. */
     val async: AsyncCollection,
     bucketName: String
-) {
+) extends ScalaVersionSpecificCollection {
   private[scala] implicit val ec: ExecutionContext = async.ec
 
   def name: String = async.name
@@ -442,9 +439,6 @@ class Collection(
     *
     * @param id             $Id
     * @param lockTime        how long to lock the document for
-    * @param timeout        $Timeout
-    * @param retryStrategy  $RetryStrategy
-    * @param parentSpan    $ParentSpan
     *
     * @return on success, a Success(GetResult)`, else a `Failure(CouchbaseException)`.  This could be `com
     *         .couchbase.client.core.error.DocumentDoesNotExistException`, indicating the document could not be
@@ -772,51 +766,4 @@ class Collection(
     block(async.touch(id, expiry, options))
   }
 
-  /** Returns a [[com.couchbase.client.scala.datastructures.CouchbaseBuffer]] backed by this collection.
-    *
-    * @param id id of the document underyling the datastructure
-    * @param options options for controlling the behaviour of the datastructure
-    */
-  def buffer[T: JsonDeserializer: JsonSerializer: ClassTag](
-      id: String,
-      options: Option[CouchbaseCollectionOptions] = None
-  ): CouchbaseBuffer[T] = {
-    new CouchbaseBuffer[T](id, this)
-  }
-
-  /** Returns a [[com.couchbase.client.scala.datastructures.CouchbaseSet]] backed by this collection.
-    *
-    * @param id id of the document underyling the datastructure
-    * @param options options for controlling the behaviour of the datastructure
-    */
-  def set[T: JsonDeserializer: JsonSerializer: ClassTag](
-      id: String,
-      options: Option[CouchbaseCollectionOptions] = None
-  ): CouchbaseSet[T] = {
-    new CouchbaseSet[T](id, this)
-  }
-
-  /** Returns a [[com.couchbase.client.scala.datastructures.CouchbaseMap]] backed by this collection.
-    *
-    * @param id id of the document underyling the datastructure
-    * @param options options for controlling the behaviour of the datastructure
-    */
-  def map[T: JsonDeserializer: JsonSerializer: ClassTag](
-      id: String,
-      options: Option[CouchbaseCollectionOptions] = None
-  ): CouchbaseMap[T] = {
-    new CouchbaseMap[T](id, this)
-  }
-
-  /** Returns a [[com.couchbase.client.scala.datastructures.CouchbaseQueue]] backed by this collection.
-    *
-    * @param id id of the document underyling the datastructure
-    * @param options options for controlling the behaviour of the datastructure
-    */
-  def queue[T: JsonDeserializer: JsonSerializer: ClassTag](
-      id: String,
-      options: Option[CouchbaseCollectionOptions] = None
-  ): CouchbaseQueue[T] = {
-    new CouchbaseQueue[T](id, this)
-  }
 }

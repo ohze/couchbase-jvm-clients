@@ -26,7 +26,7 @@ import com.couchbase.client.scala.search.SearchOptions
 import com.couchbase.client.scala.search.queries.SearchQuery
 import com.couchbase.client.scala.search.result.SearchFacetResult._
 import com.couchbase.client.scala.search.result.{SearchFacetResult, SearchMetaData, SearchMetrics}
-import com.couchbase.client.scala.util.{CouchbasePickler, DurationConversions, Validate}
+import com.couchbase.client.scala.util.{DurationConversions, Validate}
 
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}

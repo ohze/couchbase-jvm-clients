@@ -17,10 +17,12 @@
 package com.couchbase.client.scala.manager.user
 
 import com.couchbase.client.core.annotation.Stability.Volatile
-import com.couchbase.client.scala.util.{CouchbasePickler, given _}
+import com.couchbase.client.scala.util.CouchbasePickler
+import com.couchbase.client.scala.util.CirceConversions._
 import io.circe
 import io.circe.Decoder.Result
 import io.circe.{HCursor, Json}
+import io.circe.syntax._
 
 /** Identifies a specific permission possessed by a user.
   *
@@ -125,7 +127,6 @@ case class RoleAndOrigins(role: Role, origins: Seq[Origin]) {
 }
 
 object RoleAndOrigins {
-  import io.circe.syntax._
   // Get back "role":"admin" but want to store it as a Role, so custom serialization logic
   implicit val rw: circe.Codec[RoleAndOrigins] = new circe.Codec[RoleAndOrigins] {
     def apply(c: HCursor): Result[RoleAndOrigins] =
