@@ -32,13 +32,16 @@ class RawBinaryTranscoder extends TranscoderWithoutSerializer {
     }
   }
 
-  override def decode[A](value: Array[Byte], flags: Int)(
-      implicit tag: universe.WeakTypeTag[A]
-  ): Try[A] = {
-    if (tag.mirror.runtimeClass(tag.tpe).isAssignableFrom(classOf[Array[Byte]])) {
-      Success(value.asInstanceOf[A])
-    } else
-      Failure(new DecodingFailureException("RawBinaryTranscoder can only decode into Array[Byte]!"))
+  override def decode[A](value: Array[Byte], flags: Int): Try[A] = {
+    Failure(new DecodingFailureException("RawBinaryTranscoder can only decode into Array[Byte]!"))
+  }
+
+  override def decodeToByteArray(value: Array[Byte], flags: Int): Try[Array[Byte]] = {
+    Success(value)
+  }
+
+  override def decodeToString(value: Array[Byte], flags: Int): Try[String] = {
+    Failure(new DecodingFailureException("RawBinaryTranscoder can only decode into Array[Byte]!"))
   }
 }
 

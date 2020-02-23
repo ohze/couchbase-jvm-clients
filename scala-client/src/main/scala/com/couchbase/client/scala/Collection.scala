@@ -25,6 +25,7 @@ import com.couchbase.client.scala.util.TimeoutUtil
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 import scala.util.control.NonFatal
 import scala.util.{Failure, Try}
@@ -776,10 +777,9 @@ class Collection(
     * @param id id of the document underyling the datastructure
     * @param options options for controlling the behaviour of the datastructure
     */
-  def buffer[T](id: String, options: Option[CouchbaseCollectionOptions] = None)(
-      implicit decode: JsonDeserializer[T],
-      encode: JsonSerializer[T],
-      tag: WeakTypeTag[T]
+  def buffer[T: JsonDeserializer: JsonSerializer: ClassTag](
+      id: String,
+      options: Option[CouchbaseCollectionOptions] = None
   ): CouchbaseBuffer[T] = {
     new CouchbaseBuffer[T](id, this)
   }
@@ -789,10 +789,9 @@ class Collection(
     * @param id id of the document underyling the datastructure
     * @param options options for controlling the behaviour of the datastructure
     */
-  def set[T](id: String, options: Option[CouchbaseCollectionOptions] = None)(
-      implicit decode: JsonDeserializer[T],
-      encode: JsonSerializer[T],
-      tag: WeakTypeTag[T]
+  def set[T: JsonDeserializer: JsonSerializer: ClassTag](
+      id: String,
+      options: Option[CouchbaseCollectionOptions] = None
   ): CouchbaseSet[T] = {
     new CouchbaseSet[T](id, this)
   }
@@ -802,10 +801,9 @@ class Collection(
     * @param id id of the document underyling the datastructure
     * @param options options for controlling the behaviour of the datastructure
     */
-  def map[T](id: String, options: Option[CouchbaseCollectionOptions] = None)(
-      implicit decode: JsonDeserializer[T],
-      encode: JsonSerializer[T],
-      tag: WeakTypeTag[T]
+  def map[T: JsonDeserializer: JsonSerializer: ClassTag](
+      id: String,
+      options: Option[CouchbaseCollectionOptions] = None
   ): CouchbaseMap[T] = {
     new CouchbaseMap[T](id, this)
   }
@@ -815,10 +813,9 @@ class Collection(
     * @param id id of the document underyling the datastructure
     * @param options options for controlling the behaviour of the datastructure
     */
-  def queue[T](id: String, options: Option[CouchbaseCollectionOptions] = None)(
-      implicit decode: JsonDeserializer[T],
-      encode: JsonSerializer[T],
-      tag: WeakTypeTag[T]
+  def queue[T: JsonDeserializer: JsonSerializer: ClassTag](
+      id: String,
+      options: Option[CouchbaseCollectionOptions] = None
   ): CouchbaseQueue[T] = {
     new CouchbaseQueue[T](id, this)
   }

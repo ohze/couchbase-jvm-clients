@@ -20,7 +20,7 @@ import com.couchbase.client.core.msg.kv.CodecFlags
 import scala.reflect.runtime.universe._
 import scala.util.{Failure, Try}
 
-class JsonTranscoder() extends TranscoderWithSerializer {
+class JsonTranscoder extends TranscoderWithSerializer {
 
   override def encode[T](value: T, serializer: JsonSerializer[T]): Try[EncodedValue] = {
     value match {
@@ -39,22 +39,36 @@ class JsonTranscoder() extends TranscoderWithSerializer {
     }
   }
 
-  override def decode[T](input: Array[Byte], flags: Int, serializer: JsonDeserializer[T])(
-      implicit tag: WeakTypeTag[T]
+  override def decode[T](
+      input: Array[Byte],
+      flags: Int,
+      serializer: JsonDeserializer[T]
   ): Try[T] = {
-    if (tag.mirror.runtimeClass(tag.tpe).isAssignableFrom(classOf[Array[Byte]])) {
-      Failure(
-        new IllegalArgumentException(
-          "Array[Byte] input is not supported for the JsonTranscoder!. " +
-            "If you want to read already encoded JSON, use the RawJsonTranscoder, otherwise read it " +
-            "with the RawBinaryTranscoder!"
-        )
+    // Currently no validation is done on the flags, e.g. this could be a dataformat=string doc being passed to the
+    // serializer, which will likely fail.  This may change in future.
+    serializer.deserialize(input)
+  }
+
+  override def decodeToByteArray(
+      value: Array[Byte],
+      flags: Int,
+      deserializer: JsonDeserializer[Array[Byte]]
+  ): Try[Array[Byte]] = {
+    Failure(
+      new IllegalArgumentException(
+        "Array[Byte] input is not supported for the JsonTranscoder!. " +
+          "If you want to read already encoded JSON, use the RawJsonTranscoder, otherwise read it " +
+          "with the RawBinaryTranscoder!"
       )
-    } else {
-      // Currently no validation is done on the flags, e.g. this could be a dataformat=string doc being passed to the
-      // serializer, which will likely fail.  This may change in future.
-      serializer.deserialize(input)
-    }
+    )
+  }
+
+  override def decodeToString(
+      value: Array[Byte],
+      flags: Int,
+      deserializer: JsonDeserializer[String]
+  ): Try[String] = {
+    deserializer.deserialize(value)
   }
 }
 

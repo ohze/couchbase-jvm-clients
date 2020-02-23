@@ -348,11 +348,11 @@ class KeyValueSpec extends ScalaIntegrationTest {
     assert(validations.isFailure)
   }
 
-  case class Address(line1: String)
+  case class Address(line1: String) derives io.circe.Codec.AsObject
   // Need define case class & object here - not in `all` method
   // or else, scala 2.11 will not compile, with error:
   // User is already defined as (compiler-generated) case class companion object User
-  case class User(name: String, age: Int, addresses: Seq[Address])
+  case class User(name: String, age: Int, addresses: Seq[Address]) derives io.circe.Codec.AsObject
   object User {
     implicit val codec: Codec[User] = Codec.codec[User]
   }
@@ -386,7 +386,7 @@ class KeyValueSpec extends ScalaIntegrationTest {
 
   }
 
-  case class LargeDocTest(values: Map[String, String])
+  case class LargeDocTest(values: Map[String, String]) derives io.circe.Codec.AsObject
 
   object LargeDocTest {
     implicit val codec: Codec[LargeDocTest] = Codec.codec[LargeDocTest]
@@ -407,7 +407,7 @@ class KeyValueSpec extends ScalaIntegrationTest {
     assert(as.values.size == count)
   }
 
-  case class LargeDocTest2(values: Set[Int])
+  case class LargeDocTest2(values: Set[Int]) derives io.circe.Codec.AsObject
 
   object LargeDocTest2 {
     implicit val codec: Codec[LargeDocTest2] = Codec.codec[LargeDocTest2]

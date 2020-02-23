@@ -25,5 +25,19 @@ case class AnalyticsDataset(
 )
 
 object AnalyticsDataset {
+  import io.circe.{Codec => CirceCodec}
+
+  private implicit val circeCodec: CirceCodec[AnalyticsDataset] = {
+    import io.circe._
+    val decoder: Decoder[AnalyticsDataset] =
+      Decoder.forProduct4("DatasetName", "DataverseName", "LinkName", "BucketName")(
+        AnalyticsDataset.apply
+      )
+    val encoder: Encoder[AnalyticsDataset] =
+      Encoder.forProduct4("DatasetName", "DataverseName", "LinkName", "BucketName")(
+        d => (d.name, d.dataverseName, d.linkName, d.bucketName)
+      )
+    CirceCodec.from(decoder, encoder)
+  }
   implicit val codec: Codec[AnalyticsDataset] = Codec.codec[AnalyticsDataset]
 }

@@ -35,6 +35,7 @@ import com.couchbase.client.core.retry.RetryStrategy
 import com.couchbase.client.core.util.UrlQueryStringBuilder.urlEncode
 import com.couchbase.client.scala.manager.ManagerUtil
 import com.couchbase.client.scala.transformers.JacksonTransformers
+import com.couchbase.client.scala.util.CouchbasePickler
 import com.couchbase.client.scala.util.DurationConversions._
 import com.couchbase.client.scala.util.FutureConversions
 import com.couchbase.client.scala.view.DesignDocumentNamespace
@@ -43,6 +44,9 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
+import io.circe.{Decoder, DecodingFailure, HCursor, Json, JsonObject, jawn}
+
+import scala.collection.mutable
 
 class ReactiveViewIndexManager(private[scala] val core: Core, bucket: String) {
   private val DefaultTimeout: Duration =
@@ -62,13 +66,13 @@ class ReactiveViewIndexManager(private[scala] val core: Core, bucket: String) {
           .flatMap(response => {
             response.status match {
               case ResponseStatus.SUCCESS =>
-                val parsed: Try[DesignDocument] = Try {
-                  upickle.default.read[ujson.Obj](response.content)
-                }.flatMap(json => ReactiveViewIndexManager.parseDesignDocument(designDocName, json))
+                val parsed = jawn
+                  .parseByteArray(response.content)
+                  .flatMap(ReactiveViewIndexManager.parseDesignDocument(designDocName, _))
 
                 parsed match {
-                  case Success(designDoc) => SMono.just(designDoc)
-                  case Failure(err)       => SMono.raiseError(err)
+                  case Right(designDoc) => SMono.just(designDoc)
+                  case Left(err)        => SMono.raiseError(err)
                 }
               case _ =>
                 SMono.raiseError(
@@ -96,7 +100,7 @@ class ReactiveViewIndexManager(private[scala] val core: Core, bucket: String) {
         response.status match {
           case ResponseStatus.SUCCESS =>
             ReactiveViewIndexManager
-              .parseAllDesignDocuments(new String(response.content(), UTF_8), namespace) match {
+              .parseAllDesignDocuments(response.content(), namespace) match {
               case Success(docs) => SFlux.fromIterable(docs)
               case Failure(err)  => SFlux.raiseError(err)
             }
@@ -295,37 +299,36 @@ class ReactiveViewIndexManager(private[scala] val core: Core, bucket: String) {
 
 object ReactiveViewIndexManager {
   private[scala] def parseAllDesignDocuments(
-      in: String,
+      in: Array[Byte],
       namespace: DesignDocumentNamespace
-  ): Try[ArrayBuffer[DesignDocument]] = {
-    Try {
-      val json = upickle.default.read[ujson.Obj](in)
-      val rows = json("rows").arr
-      rows
-        .map(row => {
-          val doc           = row("doc").obj
-          val metaId        = doc("meta").obj("id").str
-          val designDocName = metaId.stripPrefix("_design/")
-          if (namespace.contains(designDocName)) {
-            val designDoc = doc("json").obj
-            parseDesignDocument(designDocName, designDoc).toOption
-          } else None
-        })
-        .filter(_.isDefined)
-        .map(_.get)
-    }
+  ): Try[Seq[DesignDocument]] = {
+    def parseRow(row: Json): Option[DesignDocument] = {
+      for {
+        doc    <- row.hcursor.get[Json]("doc")
+        metaId <- doc.hcursor.downField("meta").downField("id").as[String]
+        designDocName = metaId.stripPrefix("_design/")
+      } yield
+        if (namespace.contains(designDocName)) {
+          doc.hcursor
+            .get[Json]("json")
+            .flatMap { designDoc =>
+              parseDesignDocument(designDocName, designDoc)
+            }
+            .toOption
+        } else None
+    }.toOption.flatten
+
+    val either = for {
+      json <- io.circe.jawn.decodeByteArray[Json](in)
+      rows <- json.hcursor.get[Seq[Json]]("rows")
+    } yield rows.flatMap(parseRow)
+
+    either.toTry
   }
 
-  private[scala] def parseDesignDocument(name: String, node: ujson.Obj): Try[DesignDocument] = {
-    Try {
-      val views = node("views").obj
-      val v: collection.Map[String, View] = views.map(n => {
-        val viewName   = n._1
-        val viewMap    = n._2.obj("map").str
-        val viewReduce = n._2.obj.get("reduce").map(_.str)
-        viewName -> View(viewMap, viewReduce)
-      })
-      DesignDocument(name.stripPrefix("dev_"), v)
-    }
+  private[scala] def parseDesignDocument(name: String, node: Json) = {
+    node.hcursor
+      .get[Map[String, View]]("views")
+      .map { DesignDocument(name.stripPrefix("dev_"), _) }
   }
 }

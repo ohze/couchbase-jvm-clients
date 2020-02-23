@@ -16,8 +16,6 @@
 
 package com.couchbase.client.scala.manager.user
 
-import com.couchbase.client.scala.util.CouchbasePickler
-
 /** Defines a set of roles that may be inherited by users.
   *
   * @param name        the groups' name
@@ -53,5 +51,14 @@ case class Group(
 }
 
 object Group {
-  implicit val rw: CouchbasePickler.ReadWriter[Group] = CouchbasePickler.macroRW
+  import io.circe._
+
+  implicit val rw: Codec[Group] = {
+    val d: Decoder[Group] =
+      Decoder.forProduct4("id", "description", "roles", "ldap_group_ref")(Group.apply)
+    val e: Encoder[Group] = Encoder.forProduct4("id", "description", "roles", "ldap_group_ref")(
+      x => (x.name, x.description, x.roles, x.ldapGroupReference)
+    )
+    Codec.from(d, e)
+  }
 }
