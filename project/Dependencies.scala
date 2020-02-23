@@ -120,8 +120,8 @@ object Dependencies {
   )
 
   /** @note
-    *  + In scala 2 version, upickle is `% Optional` in scala-implicits but not in scala-client
-    *  + In scala 3 version, upickle is Optional in both scala-implicits and scala-client */
+    *  + In git master branch (only support scala 2 for now), upickle is `% Optional` in scala-implicits but not in scala-client
+    *  + In sbt version (SCBC-206), upickle is Optional in both scala-implicits and scala-client for both scala 2 & scala 3 */
   val upickle = "com.lihaoyi" %% "upickle" % V.upickle
 
   private def scalaModuleCommonDeps = Def.setting {
@@ -143,24 +143,18 @@ object Dependencies {
       json4s("native"),
       json4s("jackson"),
       jawnAst,
-      playJson
+      playJson,
+      upickle
     ).map(_.withDottyCompat(sv))
 
     compat ++ optionalDeps.map(_ % Optional)
   }
 
-  def scalaImplicitsDeps = Def.setting {
-    val sv = scalaVersion.value
-
-    scalaModuleCommonDeps.value ++ Seq(
-      // jsoniterScala("core"),
-      upickle % Optional
-    ).map(_.withDottyCompat(sv))
-  }
+  def scalaImplicitsDeps = scalaModuleCommonDeps
+  // jsoniterScala("core")
 
   def scalaClientDeps = Def.setting {
-    val sv            = scalaVersion.value
-    val upickleConfig = if (isDotty.value) Optional else Compile
+    val sv = scalaVersion.value
 
     scalaModuleCommonDeps.value ++ Seq(
       jacksonDatabind % Test
@@ -175,7 +169,6 @@ object Dependencies {
       // jsoniter, // don't need this. jsoniter-scala is not depended on jsoniter
       scalaJava8Compat,
       scalacheck % Test,
-      upickle    % upickleConfig,
       // note: In pom.xml, some deps are declared both `% Optional` % `% Test`
       //, ex: json4s-jackson, jawn-ast, jackson-module-scala, circe-core, play-json
       // which caused maven warnings.

@@ -31,8 +31,8 @@ import com.couchbase.client.core.retry.RetryStrategy
 import com.couchbase.client.core.util.UrlQueryStringBuilder
 import com.couchbase.client.core.util.UrlQueryStringBuilder.urlEncode
 import com.couchbase.client.scala.manager.ManagerUtil
-import com.couchbase.client.scala.util.CouchbasePickler
 import com.couchbase.client.scala.util.DurationConversions._
+import io.circe.jawn
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.concurrent.duration.Duration
@@ -156,12 +156,11 @@ class ReactiveBucketManager(core: Core) {
         if (response.status == ResponseStatus.NOT_FOUND) {
           SMono.raiseError(BucketNotFoundException.forBucket(bucketName))
         } else {
-          ManagerUtil.checkStatus(response, "get bucket [" + redactMeta(bucketName) + "]") match {
-            case Failure(err) => SMono.raiseError(err)
-            case _ =>
-              val value = CouchbasePickler.read[BucketSettings](response.content)
-              SMono.just(value)
-          }
+          SMono.fromTry(
+            ManagerUtil
+              .checkStatus(response, "get bucket [" + redactMeta(bucketName) + "]")
+              .flatMap(_ => jawn.decodeByteArray[BucketSettings](response.content).toTry)
+          )
         }
       })
   }
@@ -176,8 +175,9 @@ class ReactiveBucketManager(core: Core) {
         ManagerUtil.checkStatus(response, "get all buckets") match {
           case Failure(err) => SFlux.raiseError(err)
           case _ =>
-            val value = CouchbasePickler.read[Seq[BucketSettings]](response.content)
-            SFlux.fromIterable(value)
+            jawn
+              .decodeByteArray[Seq[BucketSettings]](response.content)
+              .fold(err => SFlux.raiseError(err), SFlux.fromIterable)
         }
       })
   }

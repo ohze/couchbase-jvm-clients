@@ -17,7 +17,6 @@
 package com.couchbase.client.scala.manager.user
 
 import com.couchbase.client.core.annotation.Stability.Volatile
-import com.couchbase.client.scala.util.CouchbasePickler
 import com.couchbase.client.scala.util.CirceConversions._
 import io.circe
 import io.circe.Decoder.Result

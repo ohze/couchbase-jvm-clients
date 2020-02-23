@@ -19,11 +19,12 @@ import java.nio.charset.StandardCharsets
 import java.util.UUID
 
 import com.couchbase.client.core.error.IndexNotFoundException
+import com.couchbase.client.scala.Cluster
 import com.couchbase.client.scala.json.JsonObject
 import com.couchbase.client.scala.manager.search._
-import com.couchbase.client.scala.util.{CouchbasePickler, ScalaIntegrationTest}
-import com.couchbase.client.scala.Cluster
+import com.couchbase.client.scala.util.ScalaIntegrationTest
 import com.couchbase.client.test._
+import io.circe.jawn
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import org.junit.jupiter.api._
 
@@ -126,7 +127,7 @@ class SearchIndexManagerSpec extends ScalaIntegrationTest {
              "index_dynamic":true,"store_dynamic":false,"type_field":"_type"},"store":{"indexType":"scorch",
              "kvStoreName":""}},"sourceParams":null},"planPIndexes":null,"warnings":null}"""
 
-    val index = CouchbasePickler.read[SearchIndexWrapper](raw).indexDef
+    val index = jawn.decode[SearchIndexWrapper](raw).toOption.get.indexDef
     assert(index.typ.contains("fulltext-index"))
     assert(index.uuid.contains("6390517f1fa06371"))
     val pp = index.planParamsAs[JsonObject].get
