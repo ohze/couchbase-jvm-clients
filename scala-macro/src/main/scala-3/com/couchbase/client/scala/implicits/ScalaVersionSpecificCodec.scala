@@ -6,7 +6,7 @@ import io.circe.Printer
 import io.circe.syntax._
 import scala.util.{Failure, Success, Try}
 
-trait ScalaVersionSpecificCodec {
+private[scala] trait ScalaVersionSpecificCodec {
 
   /** Creates a `Codec` for the given type `T`, which is both a `JsonDeserializer[T]` and `JsonSerializer[T]`.  This is everything
     * required to send a case class directly to the Scala SDK, and retrieve results as it.
