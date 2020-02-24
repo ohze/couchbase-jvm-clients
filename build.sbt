@@ -90,7 +90,7 @@ val coreIoDepsAssemblySettings = commonAssemblySettings ++ inTask(assembly)(
       "org.HdrHistogram",
       "org.jctools"
     ).map { p =>
-      ShadeRule.rename(s"$p.**" -> s"${organization.value}.core.deps.@0").inAll
+      ShadeRule.rename(s"$p.**" -> s"com.couchbase.client.core.deps.@0").inAll
     },
     shadeResourceTransformers += Rename(
       "libnetty_tcnative_linux_x86_64.so"   -> "libcom_couchbase_client_core_deps_netty_tcnative_linux_x86_64.so",
@@ -254,7 +254,7 @@ val scalaClientAssemblySettings = commonAssemblySettings ++ inTask(assembly)(
       "scala.compat.java8",
       "scala.concurrent.java8"
     ).map { p =>
-      ShadeRule.rename(s"$p.**" -> s"${organization.value}.scala.deps.@0").inAll
+      ShadeRule.rename(s"$p.**" -> s"com.couchbase.client.scala.deps.@0").inAll
     },
     // shade scala-java8-compat, and selfJar (scala-client)
     assemblyExcludedJars := {
