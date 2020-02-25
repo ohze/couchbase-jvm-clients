@@ -27,6 +27,29 @@ This repository contains the third generation of the Couchbase SDKs on the JVM (
       - Depend on `jsoniter_scala-core`, `jsoniter_scala-macros`, `scala-refect`
       - Do not depend on `upickle`
       - Do NOT publish to maven central. Pls use the official one
++ Update dependencies
+  - reactor 3.3.1.RELEASE -> 3.3.2.RELEASE
+  - reactor-scala-extensions 0.5.0 -> 0.5.1
+  - scala-collection-compat 2.1.3 -> 2.1.4
+  - Other json dependencies such as jawn, circe, upickle, play-json, jsoniter-scala
+
+## Changelog
+
+#### scala-client:1.1.0-bc3c546
++ Update libs:
+  - netty-boring-ssl 2.0.28.Final -> 2.0.29.Final
+  - jctools 2.1.2 -> 3.0.0
+  - jackson 2.10.1 -> 2.10.2
++ Add `com.couchbase.client.scala.implicits.Codec.derived`
+  - See [Type Class Derivation](http://dotty.epfl.ch/docs/reference/contextual/derivation.html)
+  - Usage example:
+   ```scala
+   import io.circe.Codec.AsObject
+   import com.couchbase.client.scala.implicits.Codec
+     
+   case class Address(line1: String, line2: String) derives AsObject
+   case class User(name: String, age: Int, address: Address) derives AsObject, Codec
+   ````
 
 ## Overview
 
@@ -52,7 +75,7 @@ For Java:
     <dependency>
         <groupId>com.sandinh</groupId>
         <artifactId>couchbase-java-client</artifactId>
-        <version>3.0.4</version>
+        <version>???</version>
     </dependency>
 </dependencies>
 ```
@@ -64,13 +87,13 @@ For Scala:
     <dependency>
         <groupId>com.sandinh</groupId>
         <artifactId>couchbase-scala-client_0.24</artifactId>
-        <version>1.0.4</version>
+        <version>???</version>
     </dependency>
 </dependencies>
 ```
 or if you use sbt:
 ```sbt
-libraryDependencies += "com.sandinh" %% "couchbase-scala-client" % "1.0.4"
+libraryDependencies += "com.sandinh" %% "couchbase-scala-client" % ???
 ```
 
 ## Build / Test

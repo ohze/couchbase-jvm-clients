@@ -36,11 +36,7 @@ import scala.util.{Failure, Success, Try}
   *   import io.circe.Codec.AsObject
   *
   *   case class Address(line1: String, line2: String) derives AsObject
-  *   case class User(name: String, age: Int, address: Address) derives AsObject
-  *
-  *   object User {
-  *     implicit val codec: Codec[User] = Codec.codec[User]
-  *   }
+  *   case class User(name: String, age: Int, address: Address) derives AsObject, Codec
   * }}}
   *
   * Note that a `Codec` is only needed for the top-level case class: e.g. if you are inserting a User, you do
