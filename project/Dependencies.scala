@@ -123,6 +123,7 @@ object Dependencies {
     *  + In git master branch (only support scala 2 for now), upickle is `% Optional` in scala-implicits but not in scala-client
     *  + In sbt version (SCBC-206), upickle is Optional in both scala-implicits and scala-client for both scala 2 & scala 3 */
   val upickle = "com.lihaoyi" %% "upickle" % V.upickle
+  val circes  = Seq(circe("generic"), circe("jawn"))
 
   private def scalaModuleCommonDeps = Def.setting {
     val sv = scalaVersion.value
@@ -134,12 +135,8 @@ object Dependencies {
     }
 
     val optionalDeps = Seq(
-      circe("core"),
-      circe("generic"),
-      // we don't need circe-parser which is depends on circe-jawn
-      circe("jawn")
-    ) ++ Seq(
-      //        circe("parser") intransitive (),
+      // we only need circe-jawn, not circe-parser which is dependsOn circe-jawn
+      // circe("parser") intransitive (),
       json4s("native"),
       json4s("jackson"),
       jawnAst,
@@ -150,23 +147,17 @@ object Dependencies {
     compat ++ optionalDeps.map(_ % Optional)
   }
 
-  def scalaImplicitsDeps = scalaModuleCommonDeps
-  // jsoniterScala("core")
+  def scalaImplicitsDeps = Def.setting { scalaModuleCommonDeps.value ++ circes.map(_ % Optional) }
 
   def scalaClientDeps = Def.setting {
     val sv = scalaVersion.value
 
-    scalaModuleCommonDeps.value ++ Seq(
+    scalaModuleCommonDeps.value ++ circes ++ Seq(
       jacksonDatabind % Test
     ) ++ Seq(
       reactorScala,
-      // This dependency is Optional because users only need this if they use
-      // com.couchbase.client.scala.implicits.Codec.codec[T]
-      // `intransitive` so that `scala-client` don't depends on scala-compiler
-      jsoniterScala("macros") % Optional intransitive (),
-      // Note: Only used in com.couchbase.client.scala.manager.analytics.AnalyticsDataset
-      jsoniterScala("core"),
-      // jsoniter, // don't need this. jsoniter-scala is not depended on jsoniter
+      jsoniterScala("macros") % Provided,
+      // jsoniter, // don't need this
       scalaJava8Compat,
       scalacheck % Test,
       // note: In pom.xml, some deps are declared both `% Optional` % `% Test`

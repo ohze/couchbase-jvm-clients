@@ -19,7 +19,13 @@ val overridePublishSettings = Seq(
     val sha    = git.gitHeadCommit.value.get
     val suffix = if (git.gitUncommittedChanges.value) "-SNAPSHOT" else ""
     v.stripSuffix("SNAPSHOT") + sha.take(7) + suffix
-  }
+  },
+  developers += Developer(
+    "thanhbv",
+    "Bui Viet Thanh",
+    "thanhbv@sandinh.net",
+    url("https://sandinh.com")
+  )
 )
 
 ThisBuild / trackInternalDependencies := TrackLevel.TrackIfMissing
