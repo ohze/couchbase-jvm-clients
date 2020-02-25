@@ -6,14 +6,22 @@ import sbtassembly.shadeplugin.ShadePluginUtils._
 
 Global / bloopExportJarClassifiers := Some(Set("sources"))
 
-// TODO remove this (only to speedup publishLocal)
-inThisBuild(
-  Seq(
-    Compile / doc / sources := Nil,
-    Compile / packageDoc / publishArtifact := false,
-    offline := true
-  )
+// TODO remove
+ThisBuild / offline := true
+ThisBuild / Test / publishArtifact := false
+ThisBuild / organization := "com.sandinh"
+// those settings should be set at the end of project definition
+def ensurePrefix(prefix: String)(s: String): String = if (s.startsWith(prefix)) s else prefix + s
+val overridePublishSettings = Seq(
+  name ~= ensurePrefix("couchbase-"),
+  version := {
+    val v      = version.value
+    val sha    = git.gitHeadCommit.value.get
+    val suffix = if (git.gitUncommittedChanges.value) "-SNAPSHOT" else ""
+    v.stripSuffix("SNAPSHOT") + sha.take(7) + suffix
+  }
 )
+
 ThisBuild / trackInternalDependencies := TrackLevel.TrackIfMissing
 
 lazy val checkstyleSettings = Seq(
@@ -22,7 +30,7 @@ lazy val checkstyleSettings = Seq(
   checkstyleHeaderFile := (ThisBuild / baseDirectory).value / "config" / "checkstyle" / "checkstyle-header.txt"
 )
 lazy val commonSettings = checkstyleSettings ++ Seq(
-  organization := "com.couchbase.client",
+  Compile / doc / sources := Nil, // TODO remove
   javacOptions ++= Seq("-encoding", "UTF-8"),
   Compile / compile / javacOptions ++= (javaVersion match {
     case v if v >= 9 => Seq("--release", "8")
@@ -156,11 +164,13 @@ lazy val `core-io` = project
   )
   .itConfig()
   .dependsOn(`test-utils` % Test)
+  .settings(overridePublishSettings: _*)
 
 lazy val `java-client` = project
   .disablePlugins(AssemblyPlugin, ScalafmtPlugin)
   .settings(javaModuleSettings: _*)
   .settings(
+    publish / skip := true,
     description := "The official Couchbase Java SDK",
     version := "3.1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
@@ -196,6 +206,7 @@ lazy val `tracing-opentracing` = project
   .disablePlugins(AssemblyPlugin, ScalafmtPlugin)
   .settings(javaModuleSettings: _*)
   .settings(
+    publish / skip := true,
     description := "Provides interoperability with OpenTracing",
     version := "0.3.0-SNAPSHOT",
     libraryDependencies ++= Seq(
@@ -210,6 +221,7 @@ lazy val `tracing-opentelemetry` = project
   .disablePlugins(AssemblyPlugin)
   .settings(javaModuleSettings: _*)
   .settings(
+    publish / skip := true,
     description := "Provides interoperability with OpenTelemetry",
     version := "0.3.0-SNAPSHOT",
     libraryDependencies ++= Seq(
@@ -234,6 +246,7 @@ lazy val `scala-implicits` = project
     exportJars := true
   )
   .dependsOn(`core-io`, `test-utils` % Test)
+  .settings(overridePublishSettings: _*)
 
 lazy val `scala-macro` = project
   .disablePlugins(AssemblyPlugin, CheckstylePlugin)
@@ -247,6 +260,7 @@ lazy val `scala-macro` = project
     }
   )
   .dependsOn(`scala-implicits`)
+  .settings(overridePublishSettings: _*)
 
 val scalaClientAssemblySettings = commonAssemblySettings ++ inTask(assembly)(
   Seq(
@@ -286,6 +300,7 @@ lazy val `scala-client` = project
   // Note: scala-client IS depended on scala-reflect but this is not declared in the official pom.xml (bug)
   .dependsOn(`scala-macro`)
   .removePomDependsOn(scalaJava8Compat)
+  .settings(overridePublishSettings: _*)
 
 lazy val `scala-examples` = project
   .disablePlugins(AssemblyPlugin, CheckstylePlugin)
@@ -336,3 +351,4 @@ lazy val root = (project in file("."))
     publish / skip := true
   )
   .aggregate(aggregated: _*)
+  .settings(overridePublishSettings: _*)

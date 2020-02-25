@@ -1,4 +1,5 @@
-# Couchbase JVM Clients
+### Couchbase JVM Clients
+# For scala-3 (`dotty`)
 
 This repository contains the third generation of the Couchbase SDKs on the JVM ("3.0").
 
@@ -17,15 +18,15 @@ and [Scala](https://docs.couchbase.com/scala-sdk/1.0/start-using-sdk.html)
  
 ## Usage
 
-Stable releases are pushed to maven central.
+Stable [releases are pushed](https://search.maven.org/search?q=g:com.sandinh%20couchbase-) to maven central.
 
 For Java:
 
 ```xml
 <dependencies>
     <dependency>
-        <groupId>com.couchbase.client</groupId>
-        <artifactId>java-client</artifactId>
+        <groupId>com.sandinh</groupId>
+        <artifactId>couchbase-java-client</artifactId>
         <version>3.0.1</version>
     </dependency>
 </dependencies>
@@ -36,15 +37,15 @@ For Scala:
 ```xml
 <dependencies>
     <dependency>
-        <groupId>com.couchbase.client</groupId>
-        <artifactId>scala-client_2.12</artifactId>
+        <groupId>com.sandinh</groupId>
+        <artifactId>couchbase-scala-client_2.12</artifactId>
         <version>1.0.1</version>
     </dependency>
 </dependencies>
 ```
 or if you use sbt:
 ```sbt
-libraryDependencies += "com.couchbase.client" %% "scala-client" % "1.0.1"
+libraryDependencies += "com.sandinh" %% "couchbase-scala-client" % "1.0.1"
 ```
 
 ## Build / Test
