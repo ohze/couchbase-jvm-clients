@@ -38,6 +38,7 @@ object Dependencies {
     val reactorScala     = "0.5.1"
     val scalaJava8Compat = "0.9.0"
     val scalacheck       = "1.14.0"
+    val munit            = "0.5.2"
   }
 
   def reactor(name: String): ModuleID =
@@ -84,6 +85,7 @@ object Dependencies {
   val reactorScala                   = "io.projectreactor"      %% "reactor-scala-extensions" % V.reactorScala
   val scalaJava8Compat               = "org.scala-lang.modules" %% "scala-java8-compat"       % V.scalaJava8Compat
   val scalacheck                     = "org.scalacheck"         %% "scalacheck"               % V.scalacheck
+  val munit                          = "org.scalameta"          %% "munit"                    % V.munit
 
   val coreIoShadedDeps = Seq(
     netty("codec-http"),
@@ -167,4 +169,9 @@ object Dependencies {
       jacksonScala % Optional
     ).map(_.withDottyCompat(sv))
   }
+
+  val munitSettings = Seq(
+    libraryDependencies += munit % Test,
+    testFrameworks += new TestFramework("munit.Framework")
+  )
 }

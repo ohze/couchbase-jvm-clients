@@ -265,6 +265,7 @@ lazy val `scala-macro` = project
       else jsoniterScala("macros")
     }
   )
+  .settings(munitSettings: _*)
   .dependsOn(`scala-implicits`)
   .settings(overridePublishSettings: _*)
 
