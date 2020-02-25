@@ -11,3 +11,5 @@ addSbtPlugin("org.scalameta" % "sbt-scalafmt"   % "2.3.1")
 addSbtPlugin("com.sandinh"   % "sbt-checkstyle" % "3.2.2")
 
 addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.4.0")
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "1.0.0")
