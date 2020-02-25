@@ -3,6 +3,31 @@
 
 This repository contains the third generation of the Couchbase SDKs on the JVM ("3.0").
 
+## Diff against the [official sdks](https://github.com/couchbase/couchbase-jvm-clients)
++ Available for scala 3 (dotty)
++ Instead of `"com.couchbase.client" %% "scala-client"`, you need `"com.sandinh" %% "couchbase-scala-client"`
++ Internal changes:
+  - Don't shade `scala-implicits` module into `scala-client`'s .jar when publish
+  - Split `scala-implicits` into `scala-implicits` & `scala-macro`.
+    `scala-macro` contains only 1 public class `com.couchbase.client.scala.implicits.Codec`
+  - `Codec` method `def codec[T]: Codec[T]`:
+    - In scala 2: Same as the official `scala-client` lib: Use `jsoniter_scala` + scala 2's macro to auto generate the `Codec[T]`
+    - In dotty: Generate the codec based on an implicit `circe.Codec`:
+      `def codec[T: circe.Decoder : circe.Encoder]: Codec[T] = new CirceBasedCodec[T]`
++ `scala-client`'s dependency change:
+  - `com.couchbase.client:scala-client`:
+    - For dotty: NA
+    - For scala 2.x: Depend on `jsoniter_scala-core`, `jsoniter_scala-macros`, `scala-refect`, `upickle`
+  - `com.sandinh:couchbase-scala-client`:
+    - For dotty:
+      - Depend on `circe-jawn` & `circe-generic`.
+        Note: dotty version of `circe-generic` don't depend on `shapeless`
+      - Do NOT depend on `jsoniter_scala-core`, `jsoniter_scala-macros`, `scala-refect`, `upickle`
+    - For scala 2.x:
+      - Depend on `jsoniter_scala-core`, `jsoniter_scala-macros`, `scala-refect`
+      - Do not depend on `upickle`
+      - Do NOT publish to maven central. Pls use the official one
+
 ## Overview
 
 This repository contains the following projects:
