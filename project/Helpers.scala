@@ -31,7 +31,7 @@ object Helpers {
 
   lazy val commonScalaSourceDirsSetting: Seq[Def.Setting[_]] =
     inConfig(Compile)(Seq(scalaSourceDirsSetting)) ++
-    inConfig(Compile)(Seq(scalaSourceDirsSetting))
+    inConfig(Test)(Seq(scalaSourceDirsSetting))
 
   /** Redefine the IntegrationTest Configuration to extend the Test configuration
     * instead of the Runtime Configuration (the default).
