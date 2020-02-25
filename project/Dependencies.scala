@@ -11,9 +11,9 @@ object Dependencies {
     val reactor        = "3.3.2.RELEASE"
     val slf4j          = "1.7.30"
     val netty          = "4.1.45.Final"
-    val nettyBoringssl = "2.0.28.Final"
-    val jctools        = "2.1.2" // 3.0.0
-    val jackson        = "2.10.1" // 2.10.2
+    val nettyBoringssl = "2.0.29.Final"
+    val jctools        = "3.0.0"
+    val jackson        = "2.10.2"
     val snappy         = "0.4"
     val latencyutils   = "2.0.3"
     val log4jSlf4j     = "2.13.0"
