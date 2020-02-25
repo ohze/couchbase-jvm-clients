@@ -156,7 +156,7 @@ object Dependencies {
       jacksonDatabind % Test
     ) ++ Seq(
       reactorScala,
-      jsoniterScala("macros") % Provided,
+      jsoniterScala("macros") % "test;provided",
       // jsoniter, // don't need this
       scalaJava8Compat,
       scalacheck % Test,
