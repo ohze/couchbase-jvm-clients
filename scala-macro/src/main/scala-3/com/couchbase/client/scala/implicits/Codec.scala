@@ -55,6 +55,7 @@ object Codec {
     * required to send a case class directly to the Scala SDK, and retrieve results as it. */
   // @deprecated("use Codec.derived instead")
   def codec[T: circe.Decoder: circe.Encoder]: Codec[T] = new CirceBasedCodec[T]
+  /** @see [[http://dotty.epfl.ch/docs/reference/contextual/derivation.html Type Class Derivation]] */
   given derived[T: circe.Decoder: circe.Encoder]: Codec[T] = new CirceBasedCodec[T]
 }
 
