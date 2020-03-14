@@ -7,6 +7,7 @@ import sbtassembly.shadeplugin.ShadePluginUtils._
 Global / bloopExportJarClassifiers := Some(Set("sources"))
 
 // TODO remove
+ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
 ThisBuild / offline := true
 ThisBuild / Test / publishArtifact := false
 ThisBuild / organization := "com.sandinh"
