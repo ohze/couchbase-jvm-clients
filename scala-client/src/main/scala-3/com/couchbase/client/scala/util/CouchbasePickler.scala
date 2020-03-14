@@ -11,5 +11,5 @@ private[scala] object CouchbasePickler {
   @inline def read[T: Decoder](input: Array[Byte]): T = jawn.decodeByteArray(input).toTry.get
   @inline def read[T: Decoder](input: String): T = jawn.decode(input).toTry.get
   type ReadWriter[T] = Codec[T]
-  inline final def macroRW[A](given inline A: Mirror.Of[A]): Codec.AsObject[A] = Codec.AsObject.derived[A]
+  inline def macroRW[A](using inline A: Mirror.Of[A]): Codec.AsObject[A] = Codec.AsObject.derived[A]
 }
