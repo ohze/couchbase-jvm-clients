@@ -4,7 +4,7 @@ import dotty.tools.sbtplugin.DottyPlugin.autoImport._
 
 object Dependencies {
   object V {
-    val scala3         = "0.22.0-RC1" // dotty
+    val scala3         = "0.23.0-bin-20200314-SNAPSHOT"
     val scala213       = "2.13.1"
     val scala: String  = scala3 // default for scalaVersion SettingKey
     val crossScala     = Seq(scala3, scala213, "2.12.10")
@@ -33,12 +33,12 @@ object Dependencies {
     val json4s           = "3.6.7"
     val jawn             = "1.0.0"
     val upickle          = "1.0.0"
-    val circe            = "0.13.0"
+    val circe            = "0.13.1-SNAPSHOT"
     val playJson         = "2.8.1"
     val reactorScala     = "0.5.1"
     val scalaJava8Compat = "0.9.1"
     val scalacheck       = "1.14.3"
-    val munit            = "0.5.2"
+    val munit            = "0.6.0-M1+4-b24dbda5-SNAPSHOT"
   }
 
   def reactor(name: String): ModuleID =
