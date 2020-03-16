@@ -1,6 +1,6 @@
 import net.aichler.jupiter.sbt.JupiterPlugin
 import sbt.Keys._
-import sbt.{Def, _}
+import sbt.{CrossVersion, Def, _}
 import org.scalafmt.sbt.ScalafmtPlugin.scalafmtConfigSettings
 import com.etsy.sbt.checkstyle.CheckstylePlugin.autoImport.checkstyleSettings
 
@@ -60,8 +60,11 @@ object Helpers {
   implicit class AttributedFileOps(val entry: Attributed[File]) extends AnyVal {
 
     /** Check if `entry` is a Classpath entry from ModuleID `m` */
-    def isModule(m: ModuleID, scalaBinaryVersion: String): Boolean = {
-      val name = m.name + "_" + scalaBinaryVersion
+    def isModule(m: ModuleID, scalaVersion: String, scalaBinaryVersion: String): Boolean = {
+      val name = CrossVersion(m.crossVersion, scalaVersion, scalaBinaryVersion) match {
+        case Some(f) => f(m.name)
+        case None => m.name
+      }
       entry.get(moduleID.key).exists { x =>
         x.organization == m.organization &&
         x.name == name
