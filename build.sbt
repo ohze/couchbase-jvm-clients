@@ -278,15 +278,15 @@ val scalaClientAssemblySettings = commonAssemblySettings ++ inTask(assembly)(
     ).map { p =>
       ShadeRule.rename(s"$p.**" -> s"com.couchbase.client.scala.deps.@0").inAll
     },
-    // shade scala-java8-compat, and selfJar (scala-client)
+    // shade scala-java8-compat, and self (scala-client)
     assemblyExcludedJars := {
       val cp      = fullClasspath.value
-      val selfJar = (Compile / packageBin / artifactPath).value
-      val sv      = scalaBinaryVersion.value
-      cp.filterNot { entry =>
-        entry.isModule(scalaJava8Compat, sv) ||
-        entry.data == selfJar
-      }
+      val sv       = scalaVersion.value
+      val bin      = scalaBinaryVersion.value
+      val j8Compat = scalaJava8Compat withDottyCompat sv
+      // don't need check selfJar because `scala-client` / exportJars := false
+      // val selfJar = (Compile / packageBin / artifactPath).value
+      cp.filterNot(_.isModule(j8Compat, sv, bin))
     },
     shadeResourceTransformers += Discard(
       "com.fasterxml.jackson.core.JsonFactory"
