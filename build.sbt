@@ -249,7 +249,7 @@ lazy val `scala-implicits` = project
   .settings(scalaModuleSettings: _*)
   .settings(
     description := "The official Couchbase Scala SDK (Implicits)",
-    libraryDependencies ++= scalaImplicitsDeps.value,
+    scalaImplicitsDeps,
     exportJars := true
   )
   .dependsOn(`core-io`, `test-utils` % Test)
@@ -280,7 +280,7 @@ val scalaClientAssemblySettings = commonAssemblySettings ++ inTask(assembly)(
     },
     // shade scala-java8-compat, and self (scala-client)
     assemblyExcludedJars := {
-      val cp      = fullClasspath.value
+      val cp       = fullClasspath.value
       val sv       = scalaVersion.value
       val bin      = scalaBinaryVersion.value
       val j8Compat = scalaJava8Compat withDottyCompat sv
@@ -299,7 +299,7 @@ lazy val `scala-client` = project
   .enableAssemblyPublish()
   .settings(
     description := "The official Couchbase Scala SDK",
-    libraryDependencies ++= scalaClientDeps.value
+    scalaClientDeps
   )
   .itConfig()
   .dependsOn(`core-io`, `scala-implicits`, `test-utils` % Test)
