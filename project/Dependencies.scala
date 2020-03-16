@@ -149,9 +149,10 @@ object Dependencies {
     compat ++ optionalDeps.map(_ % Optional)
   }
 
-  def scalaImplicitsDeps = Def.setting { scalaModuleCommonDeps.value ++ circes.map(_ % Optional) }
+  def scalaImplicitsDeps =
+    libraryDependencies ++= scalaModuleCommonDeps.value ++ circes.map(_ % Optional)
 
-  def scalaClientDeps = Def.setting {
+  def scalaClientDeps = libraryDependencies ++= {
     val sv = scalaVersion.value
 
     scalaModuleCommonDeps.value ++ circes ++ Seq(
