@@ -4,13 +4,11 @@ import dotty.tools.sbtplugin.DottyPlugin.autoImport._
 
 object Dependencies {
   object V {
-    val scala3         = "0.23.0-bin-20200314-SNAPSHOT"
-    val scala213       = "2.13.1"
-    val scala: String  = scala3 // default for scalaVersion SettingKey
-    val crossScala     = Seq(scala3, scala213, "2.12.10")
+    val scala          = "0.23.0-RC1" // default for scalaVersion SettingKey
+    val crossScala     = Seq(scala, "2.13.1", "2.12.11")
     val reactor        = "3.3.3.RELEASE"
     val slf4j          = "1.7.30"
-    val netty          = "4.1.45.Final"
+    val netty          = "4.1.48.Final"
     val nettyBoringssl = "2.0.29.Final"
     val jctools        = "3.0.0"
     val jackson        = "2.10.3"
@@ -22,7 +20,7 @@ object Dependencies {
     val junit            = "5.6.0"
     val mockito          = "3.3.3"
     val assertj          = "3.14.0"
-    val testcontainers   = "1.12.4"
+    val testcontainers   = "1.13.0"
     val CouchbaseMock    = "73e493d259"
     val awaitility       = "4.0.2"
     val opentracing      = "0.33.0"
@@ -33,12 +31,12 @@ object Dependencies {
     val json4s           = "3.6.7"
     val jawn             = "1.0.0"
     val upickle          = "1.0.0"
-    val circe            = "0.13.1-SNAPSHOT"
+    val circe            = "0.13.0"
     val playJson         = "2.8.1"
     val reactorScala     = "0.5.1"
     val scalaJava8Compat = "0.9.1"
     val scalacheck       = "1.14.3"
-    val munit            = "0.6.0-M1+4-b24dbda5-SNAPSHOT"
+    val munit            = "0.6.0-M1"
   }
 
   def reactor(name: String): ModuleID =
@@ -80,12 +78,12 @@ object Dependencies {
   def jsoniterScala(name: String): ModuleID =
     "com.github.plokhotnyuk.jsoniter-scala" %% s"jsoniter-scala-$name" % V.jsoniterScala
   def json4s(name: String): ModuleID = "org.json4s"             %% s"json4s-$name"            % V.json4s
-  def circe(name: String): ModuleID  = "io.circe"               %% s"circe-$name"             % V.circe
+  def circe(name: String): ModuleID  = "com.sandinh"            %% s"circe-$name"             % V.circe // TODO io.circe
   val playJson                       = "com.typesafe.play"      %% "play-json"                % V.playJson
   val reactorScala                   = "io.projectreactor"      %% "reactor-scala-extensions" % V.reactorScala
   val scalaJava8Compat               = "org.scala-lang.modules" %% "scala-java8-compat"       % V.scalaJava8Compat
   val scalacheck                     = "org.scalacheck"         %% "scalacheck"               % V.scalacheck
-  val munit                          = "org.scalameta"          %% "munit"                    % V.munit
+  val munit                          = "com.sandinh"            %% "munit"                    % V.munit // TODO org.scalameta
 
   val coreIoShadedDeps = Seq(
     netty("codec-http"),
