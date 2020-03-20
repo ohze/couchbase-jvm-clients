@@ -404,12 +404,9 @@ class KeyValueSpec extends ScalaIntegrationTest {
   @Test
   def convertLargeObject(): Unit = {
     val count   = 100000
-    val content = collection.mutable.Map.empty[String, String]
-    for (x <- Range(0, count)) {
-      content.put(x.toString, "a")
-    }
-    val id  = TestUtils.docId()
-    val obj = LargeDocTest(content.toMap)
+    val content = LazyList.from(0).take(count).map(x => x.toString -> "a")
+    val id      = TestUtils.docId()
+    val obj     = LargeDocTest(content.toMap)
     coll.upsert(id, obj).get
     val result = coll.get(id).get
     val as     = result.contentAs[LargeDocTest].get
@@ -426,13 +423,9 @@ class KeyValueSpec extends ScalaIntegrationTest {
 
   @Test
   def convertLargeSet(): Unit = {
-    val count   = 100000
-    val content = collection.mutable.Set.empty[Int]
-    for (x <- Range(0, count)) {
-      content.add(x)
-    }
-    val obj = LargeDocTest2(content.toSet)
-    val id  = TestUtils.docId()
+    val count = 100000
+    val obj   = LargeDocTest2(Range(0, count).toSet)
+    val id    = TestUtils.docId()
     coll.upsert(id, obj).get
     val result = coll.get(id).get
     val as     = result.contentAs[LargeDocTest2].get
