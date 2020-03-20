@@ -65,7 +65,10 @@ trait Codec[A]            extends CodecWrapper[A, A]
 /** Codec based on jsoniter-scala's JsonValueCodec */
 private[scala] class CirceBasedCodec[T: circe.Decoder: circe.Encoder] extends Codec[T] {
   override def serialize(input: T): Try[Array[Byte]] = Try {
-    Printer.noSpaces.printToByteBuffer(input.asJson).array()
+    val buf   = Printer.noSpaces.printToByteBuffer(input.asJson)
+    val bytes = new Array[Byte](buf.limit)
+    buf.get(bytes)
+    bytes
   }
 
   override def deserialize(input: Array[Byte]): Try[T] = {
