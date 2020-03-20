@@ -74,7 +74,9 @@ case class SearchIndex(
   private def convert[T](value: Option[Json], deserializer: JsonDeserializer[T]) = {
     value match {
       case Some(pp) =>
-        val bytes = io.circe.Printer.noSpaces.printToByteBuffer(pp).array()
+        val buf   = io.circe.Printer.noSpaces.printToByteBuffer(pp)
+        val bytes = new Array[Byte](buf.limit)
+        buf.get(bytes)
         deserializer.deserialize(bytes)
       case _ => Failure(new CouchbaseException("Index does not contain this field"))
     }
