@@ -61,12 +61,11 @@ case class GetResult(
 
 object GetResult {
   def contentAsImpl[T : Type](r: Expr[GetResult])(using qctx: QuoteContext): Expr[Try[T]] = {
-    import qctx.tasty.{Type => _, Try => _, given _, _}
-    import scala.quoted.matching.summonExpr
-    import scala.quoted.autolift.{given _}
+    import qctx.tasty.{Type => _, Try => _, _}
+    import scala.quoted.Expr
     import scala.language.implicitConversions
 
-    val deserializer = summonExpr[JsonDeserializer[T]] match {
+    val deserializer = Expr.summon[JsonDeserializer[T]] match {
       case Some(x) => x
       case None =>
         qctx.throwError("no implicit argument of type " + typeOf[JsonDeserializer[T]].show +
