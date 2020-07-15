@@ -4,39 +4,39 @@ import dotty.tools.sbtplugin.DottyPlugin.autoImport._
 
 object Dependencies {
   object V {
-    val scala          = "0.23.0-RC1" // default for scalaVersion SettingKey
-    val crossScala     = Seq(scala, "2.13.1", "2.12.11")
-    val reactor        = "3.3.3.RELEASE"
+    val scala          = "0.24.0" // default for scalaVersion SettingKey
+    val crossScala     = Seq(scala, "2.13.3", "2.12.12")
+    val reactor        = "3.3.7.RELEASE"
     val slf4j          = "1.7.30"
-    val netty          = "4.1.48.Final"
-    val nettyBoringssl = "2.0.29.Final"
+    val netty          = "4.1.51.Final"
+    val nettyBoringssl = "2.0.31.Final"
     val jctools        = "3.0.0"
-    val jackson        = "2.10.3"
+    val jackson        = "2.11.1"
     val snappy         = "0.4"
     val latencyutils   = "2.0.3"
-    val log4jSlf4j     = "2.13.1"
+    val log4jSlf4j     = "2.13.3"
     // jupiter-interface's version should be same as sbt-jupiter-interface's version in project/plugins.sbt
     val jupiterInterface = "0.8.3"
-    val junit            = "5.6.0"
-    val mockito          = "3.3.3"
-    val assertj          = "3.14.0"
-    val testcontainers   = "1.13.0"
+    val junit            = "5.6.2"
+    val mockito          = "3.4.0"
+    val assertj          = "3.16.1"
+    val testcontainers   = "1.14.3"
     val CouchbaseMock    = "73e493d259"
-    val awaitility       = "4.0.2"
+    val awaitility       = "4.0.3"
     val opentracing      = "0.33.0"
-    val opentelemetry    = "0.2.0"
-    val scalaCollCompat  = "2.1.4"
+    val opentelemetry    = "0.6.0"
+    val scalaCollCompat  = "2.1.6"
     // val jsoniter         = "0.9.23"
-    val jsoniterScala    = "2.1.7"
-    val json4s           = "3.6.7"
+    val jsoniterScala    = "2.5.0"
+    val json4s           = "3.6.9"
     val jawn             = "1.0.0"
-    val upickle          = "1.0.0"
+    val upickle          = "1.1.0"
     val circe            = "0.13.0"
-    val playJson         = "2.8.1"
-    val reactorScala     = "0.5.1"
+    val playJson         = "2.9.0"
+    val reactorScala     = "0.7.1"
     val scalaJava8Compat = "0.9.1"
     val scalacheck       = "1.14.3"
-    val munit            = "0.6.0-M1"
+    val munit            = "0.7.9"
   }
 
   def reactor(name: String): ModuleID =
@@ -78,12 +78,12 @@ object Dependencies {
   def jsoniterScala(name: String): ModuleID =
     "com.github.plokhotnyuk.jsoniter-scala" %% s"jsoniter-scala-$name" % V.jsoniterScala
   def json4s(name: String): ModuleID = "org.json4s"             %% s"json4s-$name"            % V.json4s
-  def circe(name: String): ModuleID  = "com.sandinh"            %% s"circe-$name"             % V.circe // TODO io.circe
+  def circe(name: String): ModuleID  = "io.circe"               %% s"circe-$name"             % V.circe
   val playJson                       = "com.typesafe.play"      %% "play-json"                % V.playJson
   val reactorScala                   = "io.projectreactor"      %% "reactor-scala-extensions" % V.reactorScala
   val scalaJava8Compat               = "org.scala-lang.modules" %% "scala-java8-compat"       % V.scalaJava8Compat
   val scalacheck                     = "org.scalacheck"         %% "scalacheck"               % V.scalacheck
-  val munit                          = "com.sandinh"            %% "munit"                    % V.munit // TODO org.scalameta
+  val munit                          = "org.scalameta"          %% "munit"                    % V.munit // TODO org.scalameta
 
   val coreIoShadedDeps = Seq(
     netty("codec-http"),
