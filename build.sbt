@@ -4,8 +4,6 @@ import sbtassembly.shadeplugin.ResourceTransformer.{Discard, Rename}
 import sbtassembly.shadeplugin.ShadePlugin.autoImport.shadeKeys.artifactIdSuffix
 import sbtassembly.shadeplugin.ShadePluginUtils._
 
-Global / bloopExportJarClassifiers := Some(Set("sources"))
-
 // TODO remove
 ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
 ThisBuild / offline := true
