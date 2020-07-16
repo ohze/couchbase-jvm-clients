@@ -179,7 +179,8 @@ lazy val `java-client` = project
     description := "The official Couchbase Java SDK",
     version := "3.1.0-SNAPSHOT",
     libraryDependencies ++= Seq(
-      jacksonDatabind % Optional
+      jacksonDatabind % Optional,
+      reactor("test") % Test,
     )
   )
   .itConfig()
