@@ -1,6 +1,6 @@
--Xss1m
--Xms512m
--Xmx4096m
--XX:MaxInlineLevel=35
--XX:ReservedCodeCacheSize=512m
--XX:MaxMetaspaceSize=1024m
+# -Xss1m
+# -Xms512m
+# -Xmx4096m
+# -XX:MaxInlineLevel=35
+# -XX:ReservedCodeCacheSize=512m
+# -XX:MaxMetaspaceSize=1024m
