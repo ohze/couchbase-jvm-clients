@@ -4,9 +4,6 @@ import sbtassembly.shadeplugin.ResourceTransformer.{Discard, Rename}
 import sbtassembly.shadeplugin.ShadePlugin.autoImport.shadeKeys.artifactIdSuffix
 import sbtassembly.shadeplugin.ShadePluginUtils._
 
-// TODO remove
-//ThisBuild / updateOptions := updateOptions.value.withLatestSnapshots(false)
-//ThisBuild / offline := true
 ThisBuild / Test / publishArtifact := false
 ThisBuild / organization := "com.sandinh"
 // those settings should be set at the end of project definition
