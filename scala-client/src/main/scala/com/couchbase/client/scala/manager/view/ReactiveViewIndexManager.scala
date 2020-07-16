@@ -204,7 +204,7 @@ class ReactiveViewIndexManager(private[scala] val core: Core, bucket: String) {
       retryStrategy: RetryStrategy = DefaultRetryStrategy
   ): SMono[Unit] = {
     getDesignDocument(designDocName, DesignDocumentNamespace.Development, timeout, retryStrategy)
-      .map(
+      .flatMap(
         doc => upsertDesignDocument(doc, DesignDocumentNamespace.Production, timeout, retryStrategy)
       )
   }
