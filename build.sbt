@@ -1,3 +1,6 @@
+import java.time.format.DateTimeFormatter
+import java.time.ZonedDateTime
+
 import Dependencies._
 import Helpers.{IntegrationTest, _}
 import sbtassembly.shadeplugin.ResourceTransformer.{Discard, Rename}
@@ -150,6 +153,12 @@ val coreIoAssemblySettings = commonAssemblySettings ++ inTask(assembly)(
   )
 )
 
+def manifestPackageOptions(name: String) =
+  Compile / packageBin / packageOptions += Package.ManifestAttributes(
+    "Build-Time" -> DateTimeFormatter.ISO_INSTANT.format(ZonedDateTime.now()),
+    "Automatic-Module-Name" -> s"com.couchbase.client.$name",
+  )
+
 lazy val `core-io` = project
   .settings(javaModuleSettings ++ coreIoAssemblySettings: _*)
   .enableAssemblyPublish()
@@ -162,7 +171,8 @@ lazy val `core-io` = project
       val jar = (`core-io-deps` / assembly / assemblyOutputPath).value
       if (jar.exists()) Def.task { jar }
       else `core-io-deps` / assembly
-    }.value
+    }.value,
+    manifestPackageOptions("core"),
   )
   .itConfig()
   .dependsOn(`test-utils` % Test)
@@ -178,7 +188,8 @@ lazy val `java-client` = project
     libraryDependencies ++= Seq(
       jacksonDatabind % Optional,
       reactor("test") % Test,
-    )
+    ),
+    manifestPackageOptions("java"),
   )
   .itConfig()
   .dependsOn(`core-io`, `test-utils` % Test)
@@ -295,7 +306,8 @@ lazy val `scala-client` = project
   .enableAssemblyPublish()
   .settings(
     description := "The official Couchbase Scala SDK",
-    scalaClientDeps
+    scalaClientDeps,
+    manifestPackageOptions("core"),
   )
   .itConfig()
   .dependsOn(`core-io`, `scala-implicits`, `test-utils` % Test)
