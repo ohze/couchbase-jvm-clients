@@ -1,8 +1,5 @@
 package com.couchbase.client.scala.subdoc
 
-import java.time.Duration
-import java.util.Arrays
-
 import com.couchbase.client.core.error.subdoc.{PathExistsException, PathNotFoundException}
 import com.couchbase.client.core.error.{
   CouchbaseException,
@@ -22,8 +19,8 @@ import org.junit.jupiter.api._
 
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration._
+import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
-import concurrent.duration._
 
 @TestInstance(Lifecycle.PER_CLASS)
 class SubdocMutateSpec extends ScalaIntegrationTest {
