@@ -1,5 +1,5 @@
 // See https://github.com/xerial/sbt-sonatype#sbt-sonatype-plugin
-ThisBuild / organization := "com.couchbase.client" // sonatypeProfileName := organization.value
+//ThisBuild / organization := "com.couchbase.client" // sonatypeProfileName := organization.value
 ThisBuild / publishTo := sonatypePublishToBundle.value
 ThisBuild / publishMavenStyle := true
 
