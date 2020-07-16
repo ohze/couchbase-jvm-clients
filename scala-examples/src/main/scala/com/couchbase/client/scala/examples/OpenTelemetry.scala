@@ -26,8 +26,8 @@ import com.couchbase.client.scala.json.JsonObject
 import com.couchbase.client.scala.{Cluster, ClusterOptions}
 import com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestTracer
 import io.opentelemetry.exporters.inmemory.InMemorySpanExporter
-import io.opentelemetry.sdk.trace.TracerSdkFactory
-import io.opentelemetry.sdk.trace.`export`.SimpleSpansProcessor
+import io.opentelemetry.sdk.trace.TracerSdkProvider
+import io.opentelemetry.sdk.trace.`export`.SimpleSpanProcessor
 
 import scala.util.{Failure, Success}
 
@@ -35,8 +35,8 @@ object OpenTelemetry {
   def main(args: Array[String]): Unit = {
     // Create an OpenTelemetry Tracer
     val exporter = InMemorySpanExporter.create()
-    val tracer   = TracerSdkFactory.create
-    tracer.addSpanProcessor(SimpleSpansProcessor.newBuilder(exporter).build)
+    val tracer   = TracerSdkProvider.builder().build()
+    tracer.addSpanProcessor(SimpleSpanProcessor.newBuilder(exporter).build)
 
     // Provide that tracer to ClusterEnvironment
     ClusterEnvironment.builder
