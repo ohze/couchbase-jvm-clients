@@ -31,7 +31,7 @@ object Dependencies {
     val jsoniterScala    = "2.5.0"
     val json4s           = "3.6.9"
     val jawn             = "1.0.0"
-    val upickle          = "1.1.0"
+    val upickle          = "1.2.0"
     val circe            = "0.13.0"
     val playJson         = "2.9.0"
     val reactorScala     = "0.7.1"
