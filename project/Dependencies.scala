@@ -32,12 +32,12 @@ object Dependencies {
     val json4s           = "3.6.9"
     val jawn             = "1.0.0"
     val upickle          = "1.2.0"
-    val circe            = "0.13.0"
+    val circe            = "0.14.0-M1"
     val playJson         = "2.9.0"
     val reactorScala     = "0.7.1"
     val scalaJava8Compat = "0.9.1"
     val scalacheck       = "1.14.3"
-    val munit            = "0.7.9"
+    val munit            = "0.7.9+11-798b15fe"
   }
 
   def reactor(name: String): ModuleID =
@@ -84,7 +84,7 @@ object Dependencies {
   val reactorScala                   = "io.projectreactor"      %% "reactor-scala-extensions" % V.reactorScala
   val scalaJava8Compat               = "org.scala-lang.modules" %% "scala-java8-compat"       % V.scalaJava8Compat
   val scalacheck                     = "org.scalacheck"         %% "scalacheck"               % V.scalacheck
-  val munit                          = "org.scalameta"          %% "munit"                    % V.munit // TODO org.scalameta
+  val munit                          = "org.scalameta"          %% "munit"                    % V.munit
 
   val coreIoShadedDeps = Seq(
     netty("codec-http"),
@@ -155,7 +155,12 @@ object Dependencies {
     val sv = scalaVersion.value
 
     scalaModuleCommonDeps.value ++ circes ++ Seq(
-      jacksonDatabind % Test
+      // Add 2 Provided deps to fix:
+      // [error] Bad symbolic reference. A signature
+      // Ref lampepfl/dotty#8849 todo remove
+      "io.projectreactor.tools"  % "blockhound" % "1.0.4.RELEASE" % Provided,
+      "com.google.code.findbugs" % "jsr305" % "3.0.2" % Provided,
+      jacksonDatabind            % Test
     ) ++ Seq(
       reactorScala,
       jsoniterScala("macros") % "test;provided",
