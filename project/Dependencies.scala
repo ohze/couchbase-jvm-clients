@@ -4,7 +4,8 @@ import dotty.tools.sbtplugin.DottyPlugin.autoImport._
 
 object Dependencies {
   object V {
-    val scala          = "0.24.0" // default for scalaVersion SettingKey
+    // default for scalaVersion SettingKey
+    val scala: String  = System.getProperty("scalaVersion", "0.25.0-RC2")
     val crossScala     = Seq(scala, "2.13.3", "2.12.12")
     val reactor        = "3.3.7.RELEASE"
     val slf4j          = "1.7.30"
