@@ -60,7 +60,7 @@ case class GetResult(
 }
 
 object GetResult {
-  def contentAsImpl[T : Type](r: Expr[GetResult])(using qctx: QuoteContext): Expr[Try[T]] = {
+  def contentAsImpl[T : Type](r: Expr[GetResult])(using QuoteContext): Expr[Try[T]] = {
     import qctx.tasty.{Type => _, Try => _, _}
     import scala.quoted.Expr
     import scala.language.implicitConversions
@@ -68,7 +68,7 @@ object GetResult {
     val deserializer = Expr.summon[JsonDeserializer[T]] match {
       case Some(x) => x
       case None =>
-        qctx.throwError("no implicit argument of type " + typeOf[JsonDeserializer[T]].show +
+        report.throwError("no implicit argument of type " + typeOf[JsonDeserializer[T]].show +
           " was found for an implicit parameter of method GetResult.contentAs")
     }
     val tt = summon[Type[T]].unseal.tpe
@@ -81,13 +81,13 @@ object GetResult {
         // Regular case
         $r.transcoder match
           case t: TranscoderWithSerializer =>
-            if $isByteArray
+            if ${Expr(isByteArray)}
               t.decodeToByteArray(
                 bytes,
                 $r.flags,
                 $deserializer.asInstanceOf[JsonDeserializer[Array[Byte]]]
               ).asInstanceOf[Try[T]]
-            else if $isString
+            else if ${Expr(isString)}
               t.decodeToString(
                 bytes,
                 $r.flags,
@@ -97,9 +97,9 @@ object GetResult {
               t.decode(bytes, $r.flags, $deserializer)
 
           case t: TranscoderWithoutSerializer =>
-            if $isByteArray
+            if ${Expr(isByteArray)}
               t.decodeToByteArray(bytes, $r.flags).asInstanceOf[Try[T]]
-            else if $isString
+            else if ${Expr(isString)}
               t.decodeToString(bytes, $r.flags).asInstanceOf[Try[T]]
             else
               t.decode(bytes, $r.flags)
@@ -107,7 +107,7 @@ object GetResult {
       case Right(obj) =>
         // Projection
         // Check if JsonObject is sub-type of T, which mean T is JsonObject | AnyRef | Any
-        if $isJsonObject
+        if ${Expr(isJsonObject)}
           Success(obj.asInstanceOf[T])
         else
           Failure(
